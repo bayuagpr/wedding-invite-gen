@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { Plus, Upload, Edit2, Trash2, Save, X, Users, AlertCircle, Filter, Search } from 'lucide-react';
 import { Guest } from '../types';
 import { storageUtils } from '../utils/storage';
@@ -197,7 +197,6 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
       if (contacts.length > 0) {
         // Process multiple contacts with validation and duplicate detection
         const processedContacts: Guest[] = [];
-        const skippedContacts: string[] = [];
         const duplicateContacts: string[] = [];
 
         // Create lookup sets for existing guests

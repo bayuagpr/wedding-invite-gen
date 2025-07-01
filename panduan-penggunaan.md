@@ -16,6 +16,7 @@ Selamat datang di aplikasi Generator Undangan Pernikahan untuk pernikahan Putri 
 **Catatan Penting:**
 - Semua data tersimpan secara lokal di browser Anda
 - Tidak diperlukan koneksi internet kecuali saat mengirim undangan via WhatsApp
+- Fitur import dari kontak perangkat hanya tersedia di Chrome Android (versi 80+)
 
 ## Memulai
 
@@ -51,7 +52,8 @@ Tab Tamu memungkinkan Anda untuk menambah, mengedit, dan mengelola daftar tamu.
 3. Isi formulir dengan:
    - Nama Tamu (wajib diisi)
    - Nomor WhatsApp (opsional, format: 08xxx, +628xxx, atau 628xxx)
-4. Klik **Simpan**
+4. **Fitur Baru**: Klik tombol **Import** di samping kolom nama untuk mengimpor data dari kontak perangkat (hanya tersedia di Chrome Android)
+5. Klik **Simpan**
 
 ### Import Tamu dari File CSV
 1. Klik tombol **Import CSV**
@@ -60,6 +62,28 @@ Tab Tamu memungkinkan Anda untuk menambah, mengedit, dan mengelola daftar tamu.
    - Nama (wajib)
    - WhatsApp (opsional)
 4. Anda dapat mengunduh contoh file CSV dengan mengklik "Download contoh file CSV"
+
+### Import Tamu dari Kontak Perangkat (Fitur Baru)
+**Catatan**: Fitur ini hanya tersedia di browser Chrome pada perangkat Android.
+
+#### Import Satu Kontak (Helper Form)
+1. Klik tombol **Tambah Tamu**
+2. Klik tombol **Import** di samping kolom nama
+3. Pilih satu kontak dari daftar kontak perangkat
+4. Data nama dan nomor telepon akan otomatis mengisi formulir
+5. Review dan edit jika diperlukan, lalu klik **Simpan**
+
+#### Import Banyak Kontak Sekaligus
+1. Klik tombol **Import dari Kontak** (tombol ungu di samping Import CSV)
+2. Pilih beberapa kontak sekaligus dari daftar kontak perangkat
+3. Sistem akan memproses semua kontak yang dipilih:
+   - Memvalidasi nomor WhatsApp
+   - Mendeteksi dan melewati kontak duplikat
+   - Memformat nomor telepon secara otomatis
+4. Pesan konfirmasi akan menampilkan:
+   - Jumlah kontak yang berhasil diimpor
+   - Jumlah kontak dengan nomor WhatsApp valid
+   - Daftar kontak duplikat yang dilewati
 
 ### Mengedit atau Menghapus Tamu
 - **Edit**: Klik ikon pensil (✏️) di samping nama tamu
@@ -119,7 +143,9 @@ Tab Export menyediakan opsi untuk mengekspor dan mengirim undangan.
 ## Tips dan Trik
 
 ### Untuk Pengelolaan Tamu yang Efisien
-- Gunakan fitur impor CSV untuk menambahkan banyak tamu sekaligus
+- **Import Massal**: Gunakan fitur "Import dari Kontak" untuk menambahkan banyak tamu sekaligus langsung dari kontak perangkat (Chrome Android)
+- **Import CSV**: Gunakan fitur impor CSV untuk menambahkan banyak tamu dari file spreadsheet
+- **Helper Import**: Gunakan tombol "Import" di formulir tambah tamu untuk mengisi data dengan cepat dari satu kontak
 - Manfaatkan filter untuk fokus pada tamu yang belum menerima undangan
 - Tandai tamu sebagai "Sudah Dikirim" segera setelah mengirim undangan
 
@@ -132,8 +158,24 @@ Tab Export menyediakan opsi untuk mengekspor dan mengirim undangan.
 - Jangan menghapus data browsing/cache jika ingin menyimpan data tamu dan template
 - Gunakan browser yang sama untuk mengelola undangan agar data tetap konsisten
 
+### Troubleshooting Import Kontak
+**Jika tombol "Import dari Kontak" tidak muncul:**
+- Pastikan menggunakan browser Chrome di perangkat Android
+- Pastikan Chrome versi 80 atau lebih baru
+- Pastikan mengakses aplikasi melalui HTTPS
+
+**Jika import kontak gagal:**
+- Pastikan memberikan izin akses kontak saat diminta
+- Coba tutup dan buka kembali aplikasi
+- Pastikan kontak tersimpan di perangkat (bukan hanya di akun Google)
+
+**Jika nomor WhatsApp tidak valid:**
+- Sistem akan tetap mengimpor kontak tanpa nomor WhatsApp
+- Anda dapat menambahkan nomor WhatsApp secara manual setelah import
+- Format yang didukung: 08xxx, +628xxx, 628xxx
+
 ---
 
 Aplikasi Generator Undangan Pernikahan ini dirancang untuk membuat proses pengiriman undangan pernikahan menjadi lebih efisien dan personal. Selamat menggunakan aplikasi ini dan selamat merayakan hari bahagia Anda!
 
-*Terakhir diperbarui: 1 Juli 2025*
+*Terakhir diperbarui: 1 Juli 2025 - Ditambahkan fitur Import dari Kontak*
