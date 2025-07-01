@@ -82,7 +82,7 @@ const Export: React.FC<ExportProps> = ({ selectedTemplate }) => {
     const phoneNumber = guest.whatsappNumber.replace('+', '');
     // Keep emojis in the message for WhatsApp
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    const whatsappUrl = `https://api.whatsapp.com/send/?phone=${phoneNumber}&text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
   };
 
