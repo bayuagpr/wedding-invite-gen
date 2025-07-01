@@ -63,12 +63,13 @@ function App() {
   const steps = [
     { id: 'templates' as TabType, label: 'Template', icon: FileText, shortLabel: 'Template' },
     { id: 'guests' as TabType, label: 'Tamu', icon: Users, shortLabel: 'Tamu' },
-    { id: 'preview' as TabType, label: 'Preview', icon: Eye, shortLabel: 'Preview' },
+    // { id: 'preview' as TabType, label: 'Preview', icon: Eye, shortLabel: 'Preview' },
     { id: 'export' as TabType, label: 'Export', icon: Download, shortLabel: 'Export' }
   ];
 
   const getStepStatus = (stepId: TabType): StepStatus => {
-    const stepOrder: TabType[] = ['templates', 'guests', 'preview', 'export'];
+    // const stepOrder: TabType[] = ['templates', 'guests', 'preview', 'export'];
+    const stepOrder: TabType[] = ['templates', 'guests', 'export'];
     const currentIndex = stepOrder.indexOf(activeTab);
     const stepIndex = stepOrder.indexOf(stepId);
 
