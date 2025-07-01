@@ -1,21 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { Download, Copy, Check, MessageCircle, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { Download, Copy, Check, MessageCircle, FileText, Users, CheckSquare, Square, WifiOff } from 'lucide-react';
 import { Template, Guest } from '../types';
 import { storageUtils } from '../utils/storage';
+import { useNetwork } from '../contexts/NetworkContext';
 
 interface ExportProps {
   selectedTemplate?: Template;
+  selectedGuests: Set<string>;
+  setSelectedGuests: (guests: Set<string>) => void;
+  guests: Guest[];
+  setGuests: (guests: Guest[]) => void;
 }
 
-const Export: React.FC<ExportProps> = ({ selectedTemplate }) => {
-  const [guests, setGuests] = useState<Guest[]>([]);
+const Export: React.FC<ExportProps> = ({
+  selectedTemplate,
+  selectedGuests,
+  setSelectedGuests,
+  guests,
+  setGuests
+}) => {
   const [copiedMessages, setCopiedMessages] = useState<Set<string>>(new Set());
   const [copiedAll, setCopiedAll] = useState(false);
-
-  useEffect(() => {
-    const guests = storageUtils.getGuests();
-    setGuests(guests);
-  }, []);
+  const { isOnline } = useNetwork();
 
   const generatePersonalizedMessage = (template: Template, guest: Guest): string => {
     // First replace all {nama_tamu} with the guest name
@@ -56,7 +62,7 @@ const Export: React.FC<ExportProps> = ({ selectedTemplate }) => {
   const copyAllMessages = async () => {
     if (!selectedTemplate) return;
 
-    const allMessages = guests.map(guest => {
+    const allMessages = selectedGuestObjects.map(guest => {
       const message = generatePersonalizedMessage(selectedTemplate, guest);
       return `=== ${guest.name} ===\n${message}\n${'='.repeat(50)}\n`;
     }).join('\n');
@@ -101,6 +107,49 @@ const Export: React.FC<ExportProps> = ({ selectedTemplate }) => {
     window.open(whatsappUrl, '_blank');
   };
 
+  // Guest selection functions
+  const toggleGuestSelection = (guestId: string) => {
+    const newSelection = new Set(selectedGuests);
+    if (newSelection.has(guestId)) {
+      newSelection.delete(guestId);
+    } else {
+      newSelection.add(guestId);
+    }
+    setSelectedGuests(newSelection);
+  };
+
+  const selectAllGuests = () => {
+    const allGuestIds = guests.map(g => g.id);
+    setSelectedGuests(new Set(allGuestIds));
+  };
+
+  const selectUnsentGuests = () => {
+    const unsentGuestIds = guests
+      .filter(guest => guest.sentStatus === 'not_sent')
+      .map(guest => guest.id);
+    setSelectedGuests(new Set(unsentGuestIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedGuests(new Set());
+  };
+
+  const markSelectedAsSent = () => {
+    if (selectedGuests.size === 0) return;
+
+    const updatedGuests = storageUtils.markMultipleGuestsAsSent(Array.from(selectedGuests));
+    setGuests(updatedGuests);
+
+    // Update selection to exclude newly marked guests
+    const remainingUnsentIds = updatedGuests
+      .filter(guest => guest.sentStatus === 'not_sent')
+      .map(guest => guest.id);
+    setSelectedGuests(new Set(remainingUnsentIds));
+  };
+
+  // Get only selected guests for display
+  const selectedGuestObjects = guests.filter(guest => selectedGuests.has(guest.id));
+
   if (!selectedTemplate) {
     return (
       <div className="space-y-4 sm:space-y-6">
@@ -140,47 +189,61 @@ const Export: React.FC<ExportProps> = ({ selectedTemplate }) => {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-gray-800">{guests.length}</p>
-              <p className="text-gray-600 text-sm sm:text-base">Total Tamu</p>
+      {/* Guest Selection Controls */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-700">
+              <span className="font-medium">{selectedGuests.size}</span> dari <span className="font-medium">{guests.length}</span> tamu dipilih
             </div>
-            <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
           </div>
-        </div>
 
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-emerald-600">{guestsWithWhatsApp.length}</p>
-              <p className="text-gray-600 text-sm sm:text-base">Dengan WhatsApp</p>
-            </div>
-            <MessageCircle className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
-          </div>
-        </div>
-
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xl sm:text-2xl font-bold text-amber-600">{guests.length - guestsWithWhatsApp.length}</p>
-              <p className="text-gray-600 text-sm sm:text-base">Tanpa WhatsApp</p>
-            </div>
-            <Copy className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={selectAllGuests}
+              className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+            >
+              Pilih Semua
+            </button>
+            <button
+              onClick={selectUnsentGuests}
+              className="text-xs px-3 py-1 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
+            >
+              Pilih Belum Dikirim
+            </button>
+            <button
+              onClick={clearSelection}
+              className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Batal Pilih
+            </button>
+            {selectedGuests.size > 0 && (
+              <button
+                onClick={markSelectedAsSent}
+                className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium"
+              >
+                Tandai {selectedGuests.size} Tamu Sebagai Dikirim
+              </button>
+            )}
           </div>
         </div>
       </div>
 
+      
+
       {/* Bulk Actions */}
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border">
         <h3 className="text-base sm:text-lg font-semibold mb-4">Aksi Massal</h3>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <button
-            onClick={copyAllMessages}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
-          >
+        {selectedGuests.size === 0 ? (
+          <div className="text-center py-4 text-gray-500">
+            <p className="text-sm">Pilih tamu terlebih dahulu untuk menggunakan aksi massal</p>
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={copyAllMessages}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+            >
             {copiedAll ? (
               <>
                 <Check className="w-4 h-4" />
@@ -189,7 +252,7 @@ const Export: React.FC<ExportProps> = ({ selectedTemplate }) => {
             ) : (
               <>
                 <Copy className="w-4 h-4" />
-                Salin Semua Pesan
+                Salin {selectedGuests.size} Pesan
               </>
             )}
           </button>
@@ -201,35 +264,91 @@ const Export: React.FC<ExportProps> = ({ selectedTemplate }) => {
             <Download className="w-4 h-4" />
             Download sebagai File
           </button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Individual Messages */}
       <div className="space-y-4">
-        <h3 className="text-base sm:text-lg font-semibold">Pesan Individual</h3>
-        
-        {guests.map((guest) => {
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-semibold">Pesan Individual ({selectedGuestObjects.length})</h3>
+          {selectedGuestObjects.length === 0 && (
+            <p className="text-sm text-gray-500">Pilih tamu untuk melihat pesan</p>
+          )}
+        </div>
+
+        {selectedGuestObjects.map((guest) => {
           const personalizedMessage = generatePersonalizedMessage(selectedTemplate, guest);
-          
+
           return (
             <div key={guest.id} className="bg-white rounded-lg shadow-md border">
               <div className="p-3 sm:p-4 border-b border-gray-200">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                  <div>
-                    <h4 className="font-semibold text-gray-800 text-sm sm:text-base break-words">{guest.name}</h4>
-                    {guest.whatsappNumber && (
-                      <p className="text-xs sm:text-sm text-emerald-600 break-all">{guest.whatsappNumber}</p>
-                    )}
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedGuests.has(guest.id)}
+                      onChange={() => toggleGuestSelection(guest.id)}
+                      className="rounded border-gray-300 text-rose-600 focus:ring-rose-500"
+                    />
+                    <div>
+                      <h4 className="font-semibold text-gray-800 text-sm sm:text-base break-words">{guest.name}</h4>
+                      {guest.whatsappNumber && (
+                        <p className="text-xs sm:text-sm text-emerald-600 break-all">{guest.whatsappNumber}</p>
+                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              const updatedGuests = guest.sentStatus === 'sent'
+                                ? storageUtils.markGuestAsNotSent(guest.id)
+                                : storageUtils.markGuestAsSent(guest.id);
+                              setGuests(updatedGuests);
+                            }}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                              guest.sentStatus === 'sent'
+                                ? 'bg-green-500 focus:ring-green-500'
+                                : 'bg-gray-300 focus:ring-gray-500'
+                            }`}
+                            role="switch"
+                            aria-checked={guest.sentStatus === 'sent'}
+                            title={guest.sentStatus === 'sent' ? 'Tandai sebagai belum dikirim' : 'Tandai sebagai sudah dikirim'}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                guest.sentStatus === 'sent' ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
+                          <span className={`text-xs font-medium ${
+                            guest.sentStatus === 'sent' ? 'text-green-700' : 'text-gray-600'
+                          }`}>
+                            {guest.sentStatus === 'sent' ? '✅ Dikirim' : '⏳ Belum Dikirim'}
+                          </span>
+                        </div>
+                        {guest.sentAt && (
+                          <span className="text-xs text-gray-500">
+                            {new Date(guest.sentAt).toLocaleDateString('id-ID')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-2">
                     {guest.whatsappNumber && (
                       <button
-                        onClick={() => openWhatsApp(guest, personalizedMessage)}
-                        className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-xs sm:text-sm"
+                        onClick={() => isOnline ? openWhatsApp(guest, personalizedMessage) : null}
+                        disabled={!isOnline}
+                        className={`px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-xs sm:text-sm ${
+                          isOnline
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        }`}
+                        title={!isOnline ? 'WhatsApp tidak tersedia saat offline' : 'Kirim via WhatsApp'}
                       >
-                        <MessageCircle className="w-4 h-4" />
-                        WhatsApp
+                        {isOnline ? <MessageCircle className="w-4 h-4" /> : <WifiOff className="w-4 h-4" />}
+                        WhatsApp {!isOnline && '(Offline)'}
                       </button>
                     )}
                     <button

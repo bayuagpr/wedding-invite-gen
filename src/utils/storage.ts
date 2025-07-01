@@ -25,11 +25,75 @@ export const storageUtils = {
   // Guests
   getGuests: (): Guest[] => {
     const stored = localStorage.getItem(GUESTS_KEY);
-    return stored ? JSON.parse(stored) : [];
+    if (!stored) return [];
+
+    const guests = JSON.parse(stored);
+
+    // Migration: Add tracking fields to existing guests
+    const migratedGuests = guests.map((guest: any) => ({
+      ...guest,
+      sentStatus: guest.sentStatus || 'not_sent',
+      sentAt: guest.sentAt ? new Date(guest.sentAt) : undefined,
+      createdAt: new Date(guest.createdAt)
+    }));
+
+    // Save migrated data back to localStorage if migration occurred
+    const needsMigration = guests.some((guest: any) => !guest.sentStatus);
+    if (needsMigration) {
+      localStorage.setItem(GUESTS_KEY, JSON.stringify(migratedGuests));
+    }
+
+    return migratedGuests;
   },
 
   saveGuests: (guests: Guest[]) => {
     localStorage.setItem(GUESTS_KEY, JSON.stringify(guests));
+  },
+
+  // Guest status management
+  markGuestAsSent: (guestId: string): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const updatedGuests = guests.map(guest =>
+      guest.id === guestId
+        ? { ...guest, sentStatus: 'sent' as const, sentAt: new Date() }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
+  },
+
+  markGuestAsNotSent: (guestId: string): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const updatedGuests = guests.map(guest =>
+      guest.id === guestId
+        ? { ...guest, sentStatus: 'not_sent' as const, sentAt: undefined }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
+  },
+
+  markMultipleGuestsAsSent: (guestIds: string[]): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const now = new Date();
+    const updatedGuests = guests.map(guest =>
+      guestIds.includes(guest.id)
+        ? { ...guest, sentStatus: 'sent' as const, sentAt: now }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
+  },
+
+  markMultipleGuestsAsNotSent: (guestIds: string[]): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const updatedGuests = guests.map(guest =>
+      guestIds.includes(guest.id)
+        ? { ...guest, sentStatus: 'not_sent' as const, sentAt: undefined }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
   },
 
   // Settings

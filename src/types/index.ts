@@ -11,6 +11,8 @@ export interface Guest {
   name: string;
   whatsappNumber?: string;
   createdAt: Date;
+  sentStatus: 'not_sent' | 'sent';
+  sentAt?: Date;
 }
 
 export interface AppSettings {

@@ -4,7 +4,9 @@ import Templates from './components/Templates';
 import Guests from './components/Guests';
 import Preview from './components/Preview';
 import Export from './components/Export';
-import { Template } from './types';
+import OfflineIndicator from './components/OfflineIndicator';
+import PWAUpdateNotification from './components/PWAUpdateNotification';
+import { Template, Guest } from './types';
 import { storageUtils } from './utils/storage';
 
 type TabType = 'templates' | 'guests' | 'preview' | 'export';
@@ -12,6 +14,8 @@ type TabType = 'templates' | 'guests' | 'preview' | 'export';
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('templates');
   const [selectedTemplate, setSelectedTemplate] = useState<Template | undefined>();
+  const [selectedGuests, setSelectedGuests] = useState<Set<string>>(new Set());
+  const [guests, setGuests] = useState<Guest[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -24,6 +28,30 @@ function App() {
         setSelectedTemplate(template);
       }
     }
+
+    // Load guests and default select unsent ones
+    const loadGuests = () => {
+      const guestList = storageUtils.getGuests();
+      setGuests(guestList);
+
+      // Default select all guests with 'not_sent' status
+      const unsentGuestIds = guestList
+        .filter(guest => guest.sentStatus === 'not_sent')
+        .map(guest => guest.id);
+      setSelectedGuests(new Set(unsentGuestIds));
+    };
+
+    loadGuests();
+
+    // Listen for storage changes to refresh when guests are updated
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'wedding_guests') {
+        loadGuests();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const handleTemplateSelect = (template: Template) => {
@@ -47,6 +75,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Offline Indicator */}
+      <OfflineIndicator />
+
+      {/* PWA Update Notification */}
+      <PWAUpdateNotification />
+
       {/* Header */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -63,18 +97,25 @@ function App() {
                   <p className="text-sm sm:text-base text-gray-600">Putri Shahya Maharani & Bayu Agung Prakoso Wedding</p>
                 </div>
               </div>
-              
-              {/* Mobile menu button */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
-              </button>
+
+              <div className="flex items-center gap-3">
+                {/* Network Status - Desktop only */}
+                <div className="hidden sm:block">
+                  <OfflineIndicator />
+                </div>
+
+                {/* Mobile menu button */}
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="w-6 h-6" />
+                  ) : (
+                    <Menu className="w-6 h-6" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -91,7 +132,7 @@ function App() {
                   <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium text-sm transition-colors ${
+                    className={`flex items-center justify-center gap-2 py-3 px-2 rounded-lg font-medium text-xs transition-colors ${
                       activeTab === tab.id
                         ? 'bg-rose-500 text-white'
                         : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
@@ -135,14 +176,35 @@ function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         {activeTab === 'templates' && (
-          <Templates 
+          <Templates
             onTemplateSelect={handleTemplateSelect}
             selectedTemplateId={selectedTemplate?.id}
           />
         )}
-        {activeTab === 'guests' && <Guests />}
-        {activeTab === 'preview' && <Preview selectedTemplate={selectedTemplate} />}
-        {activeTab === 'export' && <Export selectedTemplate={selectedTemplate} />}
+        {activeTab === 'guests' && (
+          <Guests
+            selectedGuests={selectedGuests}
+            setSelectedGuests={setSelectedGuests}
+            guests={guests}
+            setGuests={setGuests}
+          />
+        )}
+        {activeTab === 'preview' && (
+          <Preview
+            selectedTemplate={selectedTemplate}
+            selectedGuests={selectedGuests}
+            guests={guests}
+          />
+        )}
+        {activeTab === 'export' && (
+          <Export
+            selectedTemplate={selectedTemplate}
+            selectedGuests={selectedGuests}
+            setSelectedGuests={setSelectedGuests}
+            guests={guests}
+            setGuests={setGuests}
+          />
+        )}
       </main>
 
       {/* Footer */}
