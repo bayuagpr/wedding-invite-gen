@@ -26,7 +26,8 @@ const Preview: React.FC<PreviewProps> = ({ selectedTemplate }) => {
 
     // Then find and encode guest names in URL query parameters
     // Look for URLs that contain the guest name in query parameters
-    const urlPattern = /(https?:\/\/[^\s]+\?[^`\s]*guest=)([^&\s`]+)/g;
+    // Updated pattern to capture guest names with spaces (until backtick, newline, or end of URL)
+    const urlPattern = /(https?:\/\/[^\s]+\?[^`\s]*guest=)([^`\n]+?)(?=`|\n|$)/g;
     message = message.replace(urlPattern, (match, urlPrefix, guestName) => {
       // Only encode if the guest name matches (to avoid encoding other query values)
       if (guestName === guest.name) {
