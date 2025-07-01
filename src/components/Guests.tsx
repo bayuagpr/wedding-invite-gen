@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plus, Upload, Edit2, Trash2, Save, X, Users, AlertCircle, Filter, Search } from 'lucide-react';
 import { Guest } from '../types';
 import { storageUtils } from '../utils/storage';
-import { validateWhatsAppNumber, formatWhatsAppNumber, parseCSV } from '../utils/validation';
+import { validateWhatsAppNumber, formatWhatsAppNumber, parseCSV, isContactPickerSupported } from '../utils/validation';
 import Modal from './Modal';
 
 interface GuestsProps {
@@ -19,6 +19,7 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [filter, setFilter] = useState<'all' | 'sent' | 'not_sent'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isImportingContact, setIsImportingContact] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateForm = () => {
@@ -106,6 +107,67 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
     setEditingGuest(null);
     setFormData({ name: '', whatsappNumber: '' });
     setErrors({});
+  };
+
+  const handleContactImport = async () => {
+    if (!isContactPickerSupported()) {
+      alert('Contact Picker tidak didukung di browser ini. Silakan gunakan Chrome di Android.');
+      return;
+    }
+
+    setIsImportingContact(true);
+
+    try {
+      const nav = navigator as any;
+      const contacts = await nav.contacts.select(['name', 'tel'], {
+        multiple: false
+      });
+
+      if (contacts.length > 0) {
+        const contact = contacts[0];
+
+        // Handle name (take first name from array)
+        const contactName = contact.name && contact.name.length > 0
+          ? contact.name[0]
+          : '';
+
+        // Handle phone numbers (take first tel from array)
+        const contactPhone = contact.tel && contact.tel.length > 0
+          ? contact.tel[0]
+          : '';
+
+        // Fill form fields
+        setFormData(prev => ({
+          ...prev,
+          name: contactName,
+          whatsappNumber: contactPhone
+        }));
+
+        // Clear any existing errors since we're populating with fresh data
+        setErrors({});
+
+        // Show success feedback if contact was imported
+        if (contactName || contactPhone) {
+          // You could add a toast notification here if you have one
+          console.log('Contact imported successfully');
+        }
+      }
+    } catch (error: any) {
+      // Handle different types of errors
+      if (error.name === 'SecurityError') {
+        alert('Akses kontak memerlukan interaksi pengguna. Silakan coba lagi.');
+      } else if (error.name === 'InvalidStateError') {
+        alert('Contact picker sedang terbuka atau gagal dimuat. Silakan coba lagi.');
+      } else if (error.name === 'TypeError') {
+        alert('Terjadi kesalahan teknis. Browser mungkin tidak mendukung fitur ini sepenuhnya.');
+      } else {
+        // Most common case: user cancelled the picker
+        // Don't show error for cancellation
+        console.log('Contact selection cancelled or failed:', error);
+      }
+    } finally {
+      setIsImportingContact(false);
+    }
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -399,16 +461,36 @@ Bob Johnson,`;
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Nama Tamu *
             </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm sm:text-base ${
-                errors.name ? 'border-red-300' : 'border-gray-300'
-              }`}
-              placeholder="Masukkan nama tamu"
-              autoFocus
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm sm:text-base ${
+                  errors.name ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="Masukkan nama tamu"
+                autoFocus
+              />
+              {isContactPickerSupported() && !editingGuest && (
+                <button
+                  type="button"
+                  onClick={handleContactImport}
+                  disabled={isImportingContact}
+                  className={`px-3 py-2 text-white rounded-lg flex items-center gap-1 transition-colors ${
+                    isImportingContact
+                      ? 'bg-blue-400 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  }`}
+                  title={isImportingContact ? "Memuat kontak..." : "Import dari kontak"}
+                >
+                  <Users className={`w-4 h-4 ${isImportingContact ? 'animate-pulse' : ''}`} />
+                  <span className="hidden sm:inline">
+                    {isImportingContact ? 'Memuat...' : 'Import'}
+                  </span>
+                </button>
+              )}
+            </div>
             {errors.name && (
               <p className="text-red-600 text-xs sm:text-sm mt-1">{errors.name}</p>
             )}

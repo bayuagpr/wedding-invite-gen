@@ -55,3 +55,15 @@ export const parseCSV = (csvText: string): { name: string; whatsappNumber?: stri
   
   return guests;
 };
+
+// Contact Picker API feature detection
+export const isContactPickerSupported = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+
+  try {
+    const nav = navigator as any;
+    return nav.contacts && typeof nav.contacts.select === 'function';
+  } catch {
+    return false;
+  }
+};
