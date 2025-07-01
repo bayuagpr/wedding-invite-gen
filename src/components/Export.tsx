@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Copy, Check, MessageCircle, FileText, Users, CheckSquare, Square, WifiOff } from 'lucide-react';
+import { Download, Copy, Check, MessageCircle, WifiOff } from 'lucide-react';
 import { Template, Guest } from '../types';
 import { storageUtils } from '../utils/storage';
 import { useNetwork } from '../contexts/NetworkContext';
@@ -118,34 +118,34 @@ const Export: React.FC<ExportProps> = ({
     setSelectedGuests(newSelection);
   };
 
-  const selectAllGuests = () => {
-    const allGuestIds = guests.map(g => g.id);
-    setSelectedGuests(new Set(allGuestIds));
-  };
+  // const selectAllGuests = () => {
+  //   const allGuestIds = guests.map(g => g.id);
+  //   setSelectedGuests(new Set(allGuestIds));
+  // };
 
-  const selectUnsentGuests = () => {
-    const unsentGuestIds = guests
-      .filter(guest => guest.sentStatus === 'not_sent')
-      .map(guest => guest.id);
-    setSelectedGuests(new Set(unsentGuestIds));
-  };
+  // const selectUnsentGuests = () => {
+  //   const unsentGuestIds = guests
+  //     .filter(guest => guest.sentStatus === 'not_sent')
+  //     .map(guest => guest.id);
+  //   setSelectedGuests(new Set(unsentGuestIds));
+  // };
 
-  const clearSelection = () => {
-    setSelectedGuests(new Set());
-  };
+  // const clearSelection = () => {
+  //   setSelectedGuests(new Set());
+  // };
 
-  const markSelectedAsSent = () => {
-    if (selectedGuests.size === 0) return;
+  // const markSelectedAsSent = () => {
+  //   if (selectedGuests.size === 0) return;
 
-    const updatedGuests = storageUtils.markMultipleGuestsAsSent(Array.from(selectedGuests));
-    setGuests(updatedGuests);
+  //   const updatedGuests = storageUtils.markMultipleGuestsAsSent(Array.from(selectedGuests));
+  //   setGuests(updatedGuests);
 
-    // Update selection to exclude newly marked guests
-    const remainingUnsentIds = updatedGuests
-      .filter(guest => guest.sentStatus === 'not_sent')
-      .map(guest => guest.id);
-    setSelectedGuests(new Set(remainingUnsentIds));
-  };
+  //   // Update selection to exclude newly marked guests
+  //   const remainingUnsentIds = updatedGuests
+  //     .filter(guest => guest.sentStatus === 'not_sent')
+  //     .map(guest => guest.id);
+  //   setSelectedGuests(new Set(remainingUnsentIds));
+  // };
 
   // Get only selected guests for display
   const selectedGuestObjects = guests.filter(guest => selectedGuests.has(guest.id));
@@ -178,7 +178,7 @@ const Export: React.FC<ExportProps> = ({
     );
   }
 
-  const guestsWithWhatsApp = guests.filter(guest => guest.whatsappNumber);
+  // const guestsWithWhatsApp = guests.filter(guest => guest.whatsappNumber);
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -190,7 +190,7 @@ const Export: React.FC<ExportProps> = ({
       </div>
 
       {/* Guest Selection Controls */}
-      <div className="bg-gray-50 p-4 rounded-lg">
+      {/* <div className="bg-gray-50 p-4 rounded-lg">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="text-sm text-gray-700">
@@ -227,9 +227,7 @@ const Export: React.FC<ExportProps> = ({
             )}
           </div>
         </div>
-      </div>
-
-      
+      </div> */}
 
       {/* Bulk Actions */}
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border">
