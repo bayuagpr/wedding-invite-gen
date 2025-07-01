@@ -5,6 +5,15 @@ import { storageUtils } from '../utils/storage';
 import { validateWhatsAppNumber, formatWhatsAppNumber, parseCSV, isContactPickerSupported } from '../utils/validation';
 import Modal from './Modal';
 
+// Contact Picker API types
+interface ContactInfo {
+  name?: string[];
+  tel?: string[];
+  email?: string[];
+  address?: any[];
+  icon?: Blob[];
+}
+
 interface GuestsProps {
   selectedGuests: Set<string>;
   setSelectedGuests: (guests: Set<string>) => void;
@@ -20,6 +29,7 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
   const [filter, setFilter] = useState<'all' | 'sent' | 'not_sent'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isImportingContact, setIsImportingContact] = useState(false);
+  const [isBulkImporting, setIsBulkImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateForm = () => {
@@ -119,12 +129,12 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
 
     try {
       const nav = navigator as any;
-      const contacts = await nav.contacts.select(['name', 'tel'], {
+      const contacts: ContactInfo[] = await nav.contacts.select(['name', 'tel'], {
         multiple: false
       });
 
       if (contacts.length > 0) {
-        const contact = contacts[0];
+        const contact: ContactInfo = contacts[0];
 
         // Handle name (take first name from array)
         const contactName = contact.name && contact.name.length > 0
@@ -167,6 +177,143 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
       }
     } finally {
       setIsImportingContact(false);
+    }
+  };
+
+  const handleBulkContactImport = async () => {
+    if (!isContactPickerSupported()) {
+      alert('Contact Picker tidak didukung di browser ini. Silakan gunakan Chrome di Android.');
+      return;
+    }
+
+    setIsBulkImporting(true);
+
+    try {
+      const nav = navigator as any;
+      const contacts: ContactInfo[] = await nav.contacts.select(['name', 'tel'], {
+        multiple: true  // Enable multiple contact selection
+      });
+
+      if (contacts.length > 0) {
+        // Process multiple contacts with validation and duplicate detection
+        const processedContacts: Guest[] = [];
+        const skippedContacts: string[] = [];
+        const duplicateContacts: string[] = [];
+
+        // Create lookup sets for existing guests
+        const existingNames = new Set(guests.map(g => g.name.toLowerCase().trim()));
+        const existingPhones = new Set(
+          guests
+            .filter(g => g.whatsappNumber)
+            .map(g => g.whatsappNumber!.replace(/\s/g, ''))
+        );
+
+        contacts.forEach((contact: ContactInfo, index: number) => {
+          // Handle name (take first name from array)
+          let contactName = contact.name && contact.name.length > 0
+            ? contact.name[0].trim()
+            : '';
+
+          // Skip contacts without names
+          if (!contactName) {
+            contactName = `Kontak ${index + 1}`;
+          }
+
+          // Handle phone numbers (take first tel from array)
+          let contactPhone = contact.tel && contact.tel.length > 0
+            ? contact.tel[0]
+            : '';
+
+          // Validate and format WhatsApp number if provided
+          let formattedPhone: string | undefined = undefined;
+          if (contactPhone) {
+            if (validateWhatsAppNumber(contactPhone)) {
+              formattedPhone = formatWhatsAppNumber(contactPhone);
+            } else {
+              // Skip invalid phone numbers but still add contact
+              console.log(`Invalid phone number for ${contactName}: ${contactPhone}`);
+            }
+          }
+
+          // Check for duplicates
+          const nameKey = contactName.toLowerCase().trim();
+          const phoneKey = formattedPhone ? formattedPhone.replace(/\s/g, '') : '';
+
+          const isDuplicateName = existingNames.has(nameKey);
+          const isDuplicatePhone = phoneKey && existingPhones.has(phoneKey);
+
+          if (isDuplicateName || isDuplicatePhone) {
+            duplicateContacts.push(contactName);
+            return; // Skip this contact
+          }
+
+          // Create guest object
+          const newGuest: Guest = {
+            id: Math.random().toString(36).substring(2, 11),
+            name: contactName,
+            whatsappNumber: formattedPhone,
+            createdAt: new Date(),
+            sentStatus: 'not_sent' as const,
+            sentAt: undefined
+          };
+
+          // Add to processed contacts and update lookup sets
+          processedContacts.push(newGuest);
+          existingNames.add(nameKey);
+          if (phoneKey) {
+            existingPhones.add(phoneKey);
+          }
+        });
+
+        if (processedContacts.length > 0) {
+          // Add all contacts at once (like CSV import)
+          const updatedGuests = [...guests, ...processedContacts];
+          setGuests(updatedGuests);
+          storageUtils.saveGuests(updatedGuests);
+
+          // Show success message with details
+          const validPhoneCount = processedContacts.filter(g => g.whatsappNumber).length;
+          let message = `Berhasil mengimpor ${processedContacts.length} kontak dari daftar kontak`;
+
+          if (validPhoneCount < processedContacts.length) {
+            message += ` (${validPhoneCount} dengan nomor WhatsApp valid)`;
+          }
+
+          if (duplicateContacts.length > 0) {
+            message += `\n\n${duplicateContacts.length} kontak diabaikan karena sudah ada: ${duplicateContacts.slice(0, 3).join(', ')}`;
+            if (duplicateContacts.length > 3) {
+              message += ` dan ${duplicateContacts.length - 3} lainnya`;
+            }
+          }
+
+          alert(message);
+        } else {
+          let message = 'Tidak ada kontak baru yang dapat diimpor';
+          if (duplicateContacts.length > 0) {
+            message += `\n\nSemua ${duplicateContacts.length} kontak sudah ada dalam daftar tamu`;
+          }
+          alert(message);
+        }
+      }
+    } catch (error: any) {
+      // Handle different types of errors
+      if (error.name === 'SecurityError') {
+        alert('Akses kontak memerlukan interaksi pengguna. Silakan coba lagi.');
+      } else if (error.name === 'InvalidStateError') {
+        alert('Contact picker sedang terbuka atau gagal dimuat. Silakan coba lagi.');
+      } else if (error.name === 'TypeError') {
+        alert('Terjadi kesalahan teknis. Browser mungkin tidak mendukung fitur ini sepenuhnya.');
+      } else if (error.name === 'NotAllowedError') {
+        alert('Akses ke kontak ditolak. Pastikan Anda memberikan izin akses kontak.');
+      } else if (error.name === 'AbortError') {
+        // User cancelled - don't show error
+        console.log('User cancelled contact selection');
+      } else {
+        // Other errors or user cancellation
+        console.log('Bulk contact selection cancelled or failed:', error);
+      }
+    } finally {
+      setIsBulkImporting(false);
     }
   };
 
@@ -309,6 +456,20 @@ Bob Johnson,`;
             <Upload className="w-4 h-4" />
             Import CSV
           </button>
+          {isContactPickerSupported() && (
+            <button
+              onClick={handleBulkContactImport}
+              disabled={isBulkImporting}
+              className={`text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm ${
+                isBulkImporting
+                  ? 'bg-purple-400 cursor-not-allowed'
+                  : 'bg-purple-500 hover:bg-purple-600'
+              }`}
+            >
+              <Users className={`w-4 h-4 ${isBulkImporting ? 'animate-pulse' : ''}`} />
+              {isBulkImporting ? 'Memuat...' : 'Import dari Kontak'}
+            </button>
+          )}
           <button
             onClick={startCreate}
             className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
@@ -319,21 +480,33 @@ Bob Johnson,`;
         </div>
       </div>
 
-      {/* CSV Import Instructions */}
+      {/* Import Instructions */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
         <div className="flex items-start gap-2">
           <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 mt-0.5 flex-shrink-0" />
           <div>
-            <h4 className="font-medium text-blue-800 mb-1 text-sm sm:text-base">Panduan Import CSV</h4>
-            <p className="text-xs sm:text-sm text-blue-700 mb-2">
-              File CSV harus memiliki kolom <strong>Nama</strong> (wajib) dan <strong>WhatsApp</strong> (opsional).
-            </p>
-            <button
-              onClick={downloadSampleCSV}
-              className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline"
-            >
-              Download contoh file CSV
-            </button>
+            <h4 className="font-medium text-blue-800 mb-1 text-sm sm:text-base">Panduan Import Tamu</h4>
+            <div className="space-y-2">
+              <div>
+                <p className="text-xs sm:text-sm text-blue-700 mb-1">
+                  <strong>Import CSV:</strong> File harus memiliki kolom <strong>Nama</strong> (wajib) dan <strong>WhatsApp</strong> (opsional).
+                </p>
+                <button
+                  onClick={downloadSampleCSV}
+                  className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  Download contoh file CSV
+                </button>
+              </div>
+              {isContactPickerSupported() && (
+                <div>
+                  <p className="text-xs sm:text-sm text-blue-700">
+                    <strong>Import dari Kontak:</strong> Pilih langsung dari daftar kontak di perangkat Anda.
+                    Fitur ini hanya tersedia di Chrome Android.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
