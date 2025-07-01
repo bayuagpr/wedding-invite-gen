@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Save, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Plus, Edit2, Trash2, Save, X, Download, Upload } from 'lucide-react';
 import { Template } from '../types';
 import { storageUtils } from '../utils/storage';
 import { defaultTemplates } from '../utils/templates';
@@ -14,6 +14,9 @@ const Templates: React.FC<TemplatesProps> = ({ onTemplateSelect, selectedTemplat
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({ name: '', content: '', type: 'formal' as 'formal' | 'informal' });
+  const [importStatus, setImportStatus] = useState<{ type: 'success' | 'error' | null; message: string }>({ type: null, message: '' });
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadTemplates();
@@ -92,18 +95,106 @@ const Templates: React.FC<TemplatesProps> = ({ onTemplateSelect, selectedTemplat
     setFormData({ name: '', content: '', type: 'formal' });
   };
 
+  const handleExport = () => {
+    try {
+      storageUtils.downloadTemplateConfig();
+      setImportStatus({ type: 'success', message: 'Template berhasil diekspor!' });
+      setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
+    } catch (error) {
+      setImportStatus({ type: 'error', message: 'Gagal mengekspor template.' });
+      setTimeout(() => setImportStatus({ type: null, message: '' }), 3000);
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportStatus({ type: null, message: '' });
+
+    try {
+      // Ask user for import mode
+      const shouldReplace = confirm(
+        'Pilih mode import:\n\n' +
+        'OK = Ganti semua template yang ada\n' +
+        'Cancel = Gabung dengan template yang ada (skip duplikat)'
+      );
+
+      const mode = shouldReplace ? 'replace' : 'merge';
+      const result = await storageUtils.importTemplateConfig(file, mode);
+
+      if (result.success) {
+        setImportStatus({ type: 'success', message: result.message });
+        loadTemplates(); // Reload templates
+      } else {
+        setImportStatus({ type: 'error', message: result.message });
+      }
+    } catch (error) {
+      setImportStatus({ type: 'error', message: 'Terjadi kesalahan saat mengimpor file.' });
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      setTimeout(() => setImportStatus({ type: null, message: '' }), 5000);
+    }
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Template Pesan</h2>
-        <button
-          onClick={startCreate}
-          className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Buat Template Baru
-        </button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex gap-2">
+            <button
+              onClick={handleExport}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+              title="Export template"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </button>
+            <button
+              onClick={handleImportClick}
+              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+              title="Import template"
+              disabled={isImporting}
+            >
+              <Upload className="w-4 h-4" />
+              {isImporting ? 'Importing...' : 'Import'}
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".json"
+              className="hidden"
+            />
+          </div>
+          <button
+            onClick={startCreate}
+            className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
+          >
+            <Plus className="w-4 h-4" />
+            Buat Template Baru
+          </button>
+        </div>
       </div>
+
+      {/* Import status message */}
+      {importStatus.type && (
+        <div className={`p-3 rounded-lg ${
+          importStatus.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+        }`}>
+          {importStatus.message}
+        </div>
+      )}
 
       {(isCreating || editingTemplate) && (
         <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border">

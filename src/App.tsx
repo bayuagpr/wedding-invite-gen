@@ -60,7 +60,7 @@ function App() {
                   <h1 className="text-lg sm:text-2xl font-bold text-gray-900">
                     Generator Undangan
                   </h1>
-                  <p className="text-sm sm:text-base text-gray-600">Bayu & Shahya Wedding</p>
+                  <p className="text-sm sm:text-base text-gray-600">Putri Shahya Maharani & Bayu Agung Prakoso Wedding</p>
                 </div>
               </div>
               

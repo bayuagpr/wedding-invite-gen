@@ -48,27 +48,8 @@ const Preview: React.FC<PreviewProps> = ({ selectedTemplate }) => {
     }
 
     const phoneNumber = guest.whatsappNumber.replace('+', '');
-    // Clean the message to avoid emoji encoding issues
-    const cleanMessage = message
-      .replace(/🤵/g, 'Bayu')
-      .replace(/👰/g, 'Shahya')
-      .replace(/🗓️/g, 'Tanggal:')
-      .replace(/🕐/g, 'Waktu:')
-      .replace(/📍/g, 'Tempat:')
-      .replace(/🗺️/g, 'Lokasi:')
-      .replace(/💌/g, '')
-      .replace(/💕/g, '')
-      .replace(/✨/g, '')
-      .replace(/💝/g, '')
-      .replace(/🌟/g, '')
-      .replace(/💐/g, '')
-      .replace(/🏛️/g, '')
-      .replace(/📅/g, 'Tanggal:')
-      .replace(/⏰/g, 'Waktu:')
-      .replace(/👋/g, '')
-      .replace(/🙏/g, '');
-    
-    const encodedMessage = encodeURIComponent(cleanMessage);
+    // Keep emojis in the message for WhatsApp
+    const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');
   };

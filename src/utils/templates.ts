@@ -4,112 +4,151 @@ export const defaultTemplates: Omit<Template, 'id' | 'createdAt'>[] = [
   {
     name: 'Template Formal 1',
     type: 'formal',
-    content: `Assalamu'alaikum Wr. Wb.
+    content: `_Assalamu'alaikum Warahmatullahi Wabarakatuh_
 
-Yang terhormat {nama_tamu},
+Kepada Yth. Bapak/Ibu/Sdr *{nama_tamu}*
 
-Dengan memohon rahmat dan ridho Allah SWT, kami bermaksud mengundang Bapak/Ibu/Saudara/i untuk menghadiri acara pernikahan putra-putri kami:
+Dengan penuh rasa syukur atas rahmat dan karunia Allah SWT, kami bermaksud mengundang Bapak/Ibu/Sdr untuk menghadiri pernikahan putra/putri kami
 
-Bayu & Shahya
+*Putri Shahya Maharani* & *Bayu Agung Prakoso*
 
-Yang akan diselenggarakan pada:
+yang akan dilaksanakan pada
 
-Hari, Tanggal: [Isi tanggal acara]
-Waktu: [Isi waktu acara]
-Tempat: [Isi lokasi acara]
-Lokasi: [Link Google Maps]
+*Hari/Tanggal* : *Minggu, 13 Juli 2025*
+*Waktu* : *11.00 - 13.30 WIB*
+*Lokasi* : *Harmony Banquet Halls Yasmin, Bogor*
 
-Merupakan suatu kehormatan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu kepada kedua mempelai.
+💌 _Informasi selengkapnya dapat di akses melalui_ :
+\`http://bayu-dan-shahya-menikah.netlify.app/?guest={nama_tamu}\`
+
+Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Sdr berkenan hadir dan turut mendoakan keberkahan bagi kedua mempelai.
 
 Atas kehadiran dan doa restunya, kami ucapkan terima kasih.
 
-Wassalamu'alaikum Wr. Wb.
+_Wassalamu'alaikum Warahmatullahi Wabarakatuh_
 
-Keluarga Besar
-Bayu & Shahya`
+Hormat kami,
+*Irwan Suhenrawan & Eti Nurhayati*
+*#BAYUakhirnyaSAHYA*`
   },
   {
     name: 'Template Formal 2',
     type: 'formal',
-    content: `Bismillahirrahmanirrahim
+    content: `_Bismillahirrahmanirrahim_
 
 Kepada Yth.
-{nama_tamu}
+*{nama_tamu}*
 
 Dengan segala kerendahan hati, kami mengundang Bapak/Ibu/Saudara/i untuk hadir dalam acara sakral pernikahan:
 
-Bayu & Shahya
+*Putri Shahya Maharani* & *Bayu Agung Prakoso*
 
-[Hari & Tanggal]
-[Waktu]
-[Tempat]
-[Alamat Lengkap]
-[Link Lokasi]
+*[Hari & Tanggal]*
+*[Waktu]*
+*[Tempat]*
+*[Alamat Lengkap]*
+
+💌 _Informasi selengkapnya_:
+\`http://bayu-dan-shahya-menikah.netlify.app/?guest={nama_tamu}\`
 
 Tanpa mengurangi rasa hormat, kami memohon kehadiran Bapak/Ibu/Saudara/i untuk menjadi saksi dan memberikan doa restu atas pernikahan kami.
 
-Jazakumullahu khairan katsiran.
+_Jazakumullahu khairan katsiran._
 
 Hormat kami,
-Kedua Mempelai & Keluarga`
+*Kedua Mempelai & Keluarga*
+*#BAYUakhirnyaSAHYA*`
   },
   {
     name: 'Template Informal 1',
     type: 'informal',
-    content: `Halo {nama_tamu}!
+    content: `Halo *{nama_tamu}*! 👋
 
-Kabar bahagia nih! Kami dengan senang hati mengundang kamu untuk hadir di pernikahan:
+_Kabar bahagia nih!_ Kami dengan senang hati mengundang kamu untuk hadir di pernikahan:
 
-Bayu & Shahya
+*Putri Shahya Maharani* & *Bayu Agung Prakoso*
 
-Save the date ya:
-Tanggal: [Tanggal]
-Waktu: [Waktu]
-Tempat: [Tempat]
-Lokasi: [Link Lokasi]
+*Save the date ya:*
+*Tanggal*: [Tanggal]
+*Waktu*: [Waktu]
+*Tempat*: [Tempat]
 
-Kehadiran kamu akan sangat berarti buat kami. Gak sabar ketemu dan berbagi kebahagiaan bareng!
+💌 _Info lengkap_:
+\`http://bayu-dan-shahya-menikah.netlify.app/?guest={nama_tamu}\`
 
-Terima kasih sebelumnya ya!
+Kehadiran kamu akan sangat berarti buat kami. _Gak sabar ketemu dan berbagi kebahagiaan bareng!_
 
-With love,
-Bayu & Shahya`
+Terima kasih sebelumnya ya! 🙏
+
+_With love,_
+*Putri & Bayu*
+*#BAYUakhirnyaSAHYA*`
   },
   {
     name: 'Template Informal 2',
     type: 'informal',
-    content: `Hi {nama_tamu}!
+    content: `Hi *{nama_tamu}*! 👋
 
-Big news! Kami mengundang kamu untuk celebrate our special day:
+_Big news!_ Kami mengundang kamu untuk celebrate our special day:
 
-Bayu & Shahya Wedding
+*Putri Shahya Maharani* & *Bayu Agung Prakoso* Wedding 💕
 
-Details:
-[Hari, Tanggal]
-[Waktu]
-[Venue]
-[Alamat]
-[Maps Link]
+*Details:*
+*[Hari, Tanggal]*
+*[Waktu]*
+*[Venue]*
+*[Alamat]*
 
-Can't wait to share this magical moment with you! Your presence would mean the world to us
+💌 _Digital invitation_:
+\`http://bayu-dan-shahya-menikah.netlify.app/?guest={nama_tamu}\`
 
-RSVP and see you there! 
+_Can't wait to share this magical moment with you!_ Your presence would mean the world to us ✨
 
-Love & hugs,
-B & S`
+RSVP and see you there! 🎉
+
+_Love & hugs,_
+*P & B*
+*#BAYUakhirnyaSAHYA*`
   },
   {
     name: 'Template Singkat',
     type: 'informal',
-    content: `{nama_tamu}, kamu diundang!
+    content: `*{nama_tamu}*, kamu diundang! 💌
 
-Bayu & Shahya Wedding
-[Tanggal] [Waktu]
-[Tempat]
-[Link]
+*Putri Shahya Maharani* & *Bayu Agung Prakoso* Wedding
+*[Tanggal] [Waktu]*
+*[Tempat]*
 
-Datang ya!
+_Info lengkap_:
+\`http://bayu-dan-shahya-menikah.netlify.app/?guest={nama_tamu}\`
 
-#BayuShahyaWedding`
+_Datang ya!_ 🎉
+
+*#BAYUakhirnyaSAHYA*`
+  },
+  {
+    name: 'Template dengan Emoji',
+    type: 'informal',
+    content: `Halo *{nama_tamu}*! 👋
+
+💕 _Kabar bahagia nih!_ Kami dengan senang hati mengundang kamu untuk hadir di pernikahan:
+
+👰 *Putri Shahya Maharani* & 🤵 *Bayu Agung Prakoso*
+
+✨ *Save the date ya:*
+📅 *Tanggal*: [Tanggal]
+⏰ *Waktu*: [Waktu]
+📍 *Tempat*: [Tempat]
+
+🌐 _Digital invitation_:
+\`http://bayu-dan-shahya-menikah.netlify.app/?guest={nama_tamu}\`
+
+💝 Kehadiran kamu akan sangat berarti buat kami. _Gak sabar ketemu dan berbagi kebahagiaan bareng!_
+
+🙏 Terima kasih sebelumnya ya!
+
+💌 _With love,_
+*Putri & Bayu* 💕
+*#BAYUakhirnyaSAHYA*`
   }
 ];
