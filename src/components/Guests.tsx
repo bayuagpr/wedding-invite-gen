@@ -51,6 +51,16 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
   };
 
   const handleSave = () => {
+    // Auto-add any pending label before validation
+    if (newLabel.trim() && !formData.labels.includes(newLabel.trim())) {
+      const label = newLabel.trim();
+      setFormData(prev => ({
+        ...prev,
+        labels: [...prev.labels, label]
+      }));
+      setNewLabel('');
+    }
+
     if (!validateForm()) return;
 
     const now = new Date();
