@@ -52,12 +52,14 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
 
   const handleSave = () => {
     // Auto-add any pending label before validation
+    let finalFormData = formData;
     if (newLabel.trim() && !formData.labels.includes(newLabel.trim())) {
       const label = newLabel.trim();
-      setFormData(prev => ({
-        ...prev,
-        labels: [...prev.labels, label]
-      }));
+      finalFormData = {
+        ...formData,
+        labels: [...formData.labels, label]
+      };
+      setFormData(finalFormData);
       setNewLabel('');
     }
 
@@ -71,18 +73,18 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
         g.id === editingGuest.id
           ? {
               ...editingGuest,
-              ...formData,
-              whatsappNumber: formData.whatsappNumber ? formatWhatsAppNumber(formData.whatsappNumber) : undefined,
-              labels: formData.labels
+              ...finalFormData,
+              whatsappNumber: finalFormData.whatsappNumber ? formatWhatsAppNumber(finalFormData.whatsappNumber) : undefined,
+              labels: finalFormData.labels
             }
           : g
       );
     } else {
       const newGuest: Guest = {
         id: Math.random().toString(36).substring(2, 11),
-        name: formData.name.trim(),
-        whatsappNumber: formData.whatsappNumber ? formatWhatsAppNumber(formData.whatsappNumber) : undefined,
-        labels: formData.labels,
+        name: finalFormData.name.trim(),
+        whatsappNumber: finalFormData.whatsappNumber ? formatWhatsAppNumber(finalFormData.whatsappNumber) : undefined,
+        labels: finalFormData.labels,
         createdAt: now,
         sentStatus: 'not_sent',
         sentAt: undefined
