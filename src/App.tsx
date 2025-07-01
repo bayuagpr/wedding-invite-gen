@@ -6,10 +6,9 @@ import Preview from './components/Preview';
 import Export from './components/Export';
 import OfflineIndicator from './components/OfflineIndicator';
 import PWAUpdateNotification from './components/PWAUpdateNotification';
+import Stepper, { TabType, StepStatus } from './components/Stepper';
 import { Template, Guest } from './types';
 import { storageUtils } from './utils/storage';
-
-type TabType = 'templates' | 'guests' | 'preview' | 'export';
 
 function App() {
   const [activeTab, setActiveTab] = useState<TabType>('templates');
@@ -61,16 +60,40 @@ function App() {
     storageUtils.saveSettings(settings);
   };
 
-  const tabs = [
-    { id: 'templates' as TabType, label: 'Template', icon: FileText },
-    { id: 'guests' as TabType, label: 'Tamu', icon: Users },
-    { id: 'preview' as TabType, label: 'Preview', icon: Eye },
-    { id: 'export' as TabType, label: 'Export', icon: Download }
+  const steps = [
+    { id: 'templates' as TabType, label: 'Template', icon: FileText, shortLabel: 'Template' },
+    { id: 'guests' as TabType, label: 'Tamu', icon: Users, shortLabel: 'Tamu' },
+    { id: 'preview' as TabType, label: 'Preview', icon: Eye, shortLabel: 'Preview' },
+    { id: 'export' as TabType, label: 'Export', icon: Download, shortLabel: 'Export' }
   ];
 
-  const handleTabChange = (tabId: TabType) => {
-    setActiveTab(tabId);
-    setIsMobileMenuOpen(false);
+  const getStepStatus = (stepId: TabType): StepStatus => {
+    const stepOrder: TabType[] = ['templates', 'guests', 'preview', 'export'];
+    const currentIndex = stepOrder.indexOf(activeTab);
+    const stepIndex = stepOrder.indexOf(stepId);
+
+    // Current step
+    if (stepId === activeTab) return 'current';
+
+    // Completed steps (can always go back)
+    if (stepIndex < currentIndex) return 'completed';
+
+    // Future steps - check accessibility
+    if (stepIndex > currentIndex) {
+      // Template required for all subsequent steps
+      if (!selectedTemplate && stepIndex > 0) return 'disabled';
+      return 'accessible';
+    }
+
+    return 'accessible';
+  };
+
+  const handleStepChange = (stepId: TabType) => {
+    const status = getStepStatus(stepId);
+    if (status !== 'disabled') {
+      setActiveTab(stepId);
+      setIsMobileMenuOpen(false);
+    }
   };
 
   return (
@@ -125,17 +148,17 @@ function App() {
       {isMobileMenuOpen && (
         <div className="md:hidden fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop */}
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          
+
           {/* Modal Content */}
           <div className="fixed inset-0 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-auto transform transition-all">
               {/* Modal Header */}
               <div className="flex items-center justify-between p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900">Menu Navigation</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Progress Undangan</h3>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
@@ -143,27 +166,28 @@ function App() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               {/* Modal Body */}
               <div className="p-6">
-                <div className="space-y-3">
-                  {tabs.map((tab) => {
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => handleTabChange(tab.id)}
-                        className={`w-full flex items-center gap-4 py-4 px-4 rounded-xl font-medium transition-all ${
-                          activeTab === tab.id
-                            ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg transform scale-105'
-                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:scale-102'
-                        }`}
-                      >
-                        <Icon className="w-5 h-5 flex-shrink-0" />
-                        <span className="text-left">{tab.label}</span>
-                      </button>
-                    );
-                  })}
+                <Stepper
+                  steps={steps}
+                  currentStep={activeTab}
+                  onStepClick={handleStepChange}
+                  getStepStatus={getStepStatus}
+                  variant="mobile"
+                />
+
+                {/* Step Details */}
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">
+                    {steps.find(step => step.id === activeTab)?.label}
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    {activeTab === 'templates' && 'Pilih template undangan yang sesuai dengan acara Anda'}
+                    {activeTab === 'guests' && 'Kelola daftar tamu yang akan menerima undangan'}
+                    {activeTab === 'preview' && 'Lihat pratinjau pesan undangan sebelum dikirim'}
+                    {activeTab === 'export' && 'Kirim undangan ke tamu yang dipilih'}
+                  </p>
                 </div>
               </div>
             </div>
@@ -171,28 +195,16 @@ function App() {
         </div>
       )}
 
-      {/* Desktop Navigation Tabs */}
+      {/* Desktop Navigation Stepper */}
       <nav className="hidden md:block bg-white border-b sticky top-[73px] sm:top-[89px] z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-rose-500 text-rose-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <Stepper
+            steps={steps}
+            currentStep={activeTab}
+            onStepClick={handleStepChange}
+            getStepStatus={getStepStatus}
+            variant="desktop"
+          />
         </div>
       </nav>
 
