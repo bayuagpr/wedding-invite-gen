@@ -21,7 +21,21 @@ const Preview: React.FC<PreviewProps> = ({ selectedTemplate }) => {
   }, []);
 
   const generatePersonalizedMessage = (template: Template, guest: Guest): string => {
-    return template.content.replace(/\{nama_tamu\}/g, guest.name);
+    // First replace all {nama_tamu} with the guest name
+    let message = template.content.replace(/\{nama_tamu\}/g, guest.name);
+
+    // Then find and encode guest names in URL query parameters
+    // Look for URLs that contain the guest name in query parameters
+    const urlPattern = /(https?:\/\/[^\s]+\?[^`\s]*guest=)([^&\s`]+)/g;
+    message = message.replace(urlPattern, (match, urlPrefix, guestName) => {
+      // Only encode if the guest name matches (to avoid encoding other query values)
+      if (guestName === guest.name) {
+        return urlPrefix + encodeURIComponent(guest.name);
+      }
+      return match;
+    });
+
+    return message;
   };
 
   const copyToClipboard = async (text: string, guestId: string) => {

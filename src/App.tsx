@@ -82,7 +82,7 @@ function App() {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-b shadow-lg">
+        <div className="md:hidden bg-white border-b shadow-lg sticky top-[73px] sm:top-[89px] z-10">
           <div className="max-w-7xl mx-auto px-4 py-2">
             <div className="grid grid-cols-2 gap-2">
               {tabs.map((tab) => {
