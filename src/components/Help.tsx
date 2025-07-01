@@ -1,3 +1,57 @@
+import React, { useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { useNavigate } from 'react-router-dom';
+import { Book, ArrowLeft } from 'lucide-react';
+import rehypeSlug from 'rehype-slug';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+
+const Help: React.FC = () => {
+  const navigate = useNavigate();
+
+  // Handle smooth scrolling for anchor links
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const element = document.getElementById(hash.substring(1));
+        if (element) {
+          element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      }
+    };
+
+    // Handle initial hash on page load
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
+
+  // Handle anchor link clicks within the component
+  const handleAnchorClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    if (target.tagName === 'A' && target.getAttribute('href')?.startsWith('#')) {
+      event.preventDefault();
+      const hash = target.getAttribute('href')!;
+      const element = document.getElementById(hash.substring(1));
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+        // Update URL without triggering page reload
+        window.history.pushState(null, '', hash);
+      }
+    }
+  };
+  const markdownContent = `
 # Panduan Penggunaan Aplikasi Generator Undangan Pernikahan
 
 ## Daftar Isi
@@ -38,7 +92,7 @@ Tab Template berisi berbagai pilihan template undangan yang dapat Anda gunakan.
 - **Template Formal** - Cocok untuk undangan resmi dengan bahasa formal
 - **Template Informal** - Cocok untuk undangan dengan bahasa yang lebih santai
 
-Setiap template sudah berisi tag `{nama_tamu}` yang nantinya akan otomatis diisi dengan nama tamu yang sesuai.
+Setiap template sudah berisi tag \`{nama_tamu}\` yang nantinya akan otomatis diisi dengan nama tamu yang sesuai.
 
 ## Mengelola Daftar Tamu
 
@@ -223,4 +277,73 @@ Tab Kirim menyediakan fitur preview terintegrasi dan opsi untuk mengirim undanga
 
 Aplikasi Generator Undangan Pernikahan ini dirancang untuk membuat proses pengiriman undangan pernikahan menjadi lebih efisien dan personal. Dengan fitur preview yang terintegrasi langsung di tab pengiriman, Anda dapat melihat dan mengirim undangan dalam satu tempat. Selamat menggunakan aplikasi ini dan selamat merayakan hari bahagia Anda!
 
-*Terakhir diperbarui: 1 Juli 2025 - Ditambahkan fitur Import dari Kontak, sistem Label untuk organisasi tamu, dan penyederhanaan alur kerja dengan menggabungkan preview ke tab pengiriman*
+*Terakhir diperbarui: 1 Juli 2025 - Ditambahkan fitur Import dari Kontak, sistem Label untuk organisasi tamu, dan penyederhanaan alur kerja dengan menggabungkan preview ke tab pengiriman*`;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Add custom styles for anchor links and scroll offset */}
+      <style>{`
+        .anchor-link {
+          text-decoration: none;
+        }
+        .anchor-link:hover {
+          text-decoration: underline;
+        }
+        /* Add scroll offset to account for sticky header */
+        h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
+          scroll-margin-top: 120px;
+        }
+      `}</style>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-4 sm:py-6">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/')}
+                className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-2 sm:p-3 rounded-lg">
+                <Book className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900">
+                  Panduan Penggunaan
+                </h1>
+                <p className="text-sm sm:text-base text-gray-600">Bantuan dan tutorial aplikasi</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm border p-6 sm:p-8">
+          <div
+            className="prose prose-gray max-w-none prose-headings:text-gray-900 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none"
+            onClick={handleAnchorClick}
+          >
+            <ReactMarkdown
+              rehypePlugins={[
+                rehypeSlug,
+                [rehypeAutolinkHeadings, {
+                  behavior: 'wrap',
+                  properties: {
+                    className: ['anchor-link']
+                  }
+                }]
+              ]}
+            >
+              {markdownContent}
+            </ReactMarkdown>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Help;

@@ -124,11 +124,11 @@ const Export: React.FC<ExportProps> = ({
   if (!selectedTemplate) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Export Pesan</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Kirim Pesan</h2>
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 sm:p-6">
           <div className="flex items-center gap-2">
             <Download className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
-            <p className="text-yellow-800 text-sm sm:text-base">Pilih template terlebih dahulu di tab Template untuk mengexport pesan</p>
+            <p className="text-yellow-800 text-sm sm:text-base">Pilih template terlebih dahulu di tab Template untuk mengirim pesan</p>
           </div>
         </div>
       </div>
@@ -138,11 +138,11 @@ const Export: React.FC<ExportProps> = ({
   if (guests.length === 0) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Export Pesan</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Kirim Pesan</h2>
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6">
           <div className="flex items-center gap-2">
             <Download className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-            <p className="text-blue-800 text-sm sm:text-base">Tambahkan tamu terlebih dahulu di tab Tamu untuk mengexport pesan</p>
+            <p className="text-blue-800 text-sm sm:text-base">Tambahkan tamu terlebih dahulu di tab Tamu untuk mengirim pesan</p>
           </div>
         </div>
       </div>
@@ -154,7 +154,7 @@ const Export: React.FC<ExportProps> = ({
   return (
     <div className="space-y-4 sm:space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Export Pesan</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Kirim Pesan</h2>
         <div className="text-xs sm:text-sm text-gray-600">
           Template: <span className="font-medium">{selectedTemplate.name}</span>
         </div>
