@@ -121,28 +121,51 @@ function App() {
         </div>
       </header>
 
-      {/* Mobile Navigation Menu */}
+      {/* Mobile Navigation Modal */}
       {isMobileMenuOpen && (
-        <div className="md:hidden bg-white border-b shadow-lg sticky top-[73px] sm:top-[89px] z-10">
-          <div className="max-w-7xl mx-auto px-4 py-2">
-            <div className="grid grid-cols-2 gap-2">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center justify-center gap-2 py-3 px-2 rounded-lg font-medium text-xs transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-rose-500 text-white'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {tab.label}
-                  </button>
-                );
-              })}
+        <div className="md:hidden fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Modal Content */}
+          <div className="fixed inset-0 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-auto transform transition-all">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">Menu Navigation</h3>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {/* Modal Body */}
+              <div className="p-6">
+                <div className="space-y-3">
+                  {tabs.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
+                        className={`w-full flex items-center gap-4 py-4 px-4 rounded-xl font-medium transition-all ${
+                          activeTab === tab.id
+                            ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg transform scale-105'
+                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100 hover:scale-102'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5 flex-shrink-0" />
+                        <span className="text-left">{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
