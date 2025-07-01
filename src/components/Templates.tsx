@@ -44,24 +44,32 @@ const Templates: React.FC<TemplatesProps> = ({ onTemplateSelect, selectedTemplat
 
     const now = new Date();
     let updatedTemplates;
+    let savedTemplate: Template;
 
     if (editingTemplate) {
-      updatedTemplates = templates.map(t => 
-        t.id === editingTemplate.id 
-          ? { ...editingTemplate, ...formData }
+      savedTemplate = { ...editingTemplate, ...formData };
+      updatedTemplates = templates.map(t =>
+        t.id === editingTemplate.id
+          ? savedTemplate
           : t
       );
     } else {
-      const newTemplate: Template = {
+      savedTemplate = {
         id: Math.random().toString(36).substr(2, 9),
         ...formData,
         createdAt: now
       };
-      updatedTemplates = [...templates, newTemplate];
+      updatedTemplates = [...templates, savedTemplate];
     }
 
     setTemplates(updatedTemplates);
     storageUtils.saveTemplates(updatedTemplates);
+
+    // If this template is currently selected, update the parent component
+    if (editingTemplate && selectedTemplateId === editingTemplate.id) {
+      onTemplateSelect(savedTemplate);
+    }
+
     resetForm();
   };
 
