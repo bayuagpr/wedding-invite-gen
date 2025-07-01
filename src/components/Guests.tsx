@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Plus, Upload, Edit2, Trash2, Save, X, Users, AlertCircle, Filter, Search } from 'lucide-react';
+import { Plus, Upload, Edit2, Trash2, Save, X, Users, AlertCircle, Filter, Search, Tag } from 'lucide-react';
 import { Guest } from '../types';
 import { storageUtils } from '../utils/storage';
 import { validateWhatsAppNumber, formatWhatsAppNumber, parseCSV, isContactPickerSupported } from '../utils/validation';
@@ -24,12 +24,15 @@ interface GuestsProps {
 const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, guests, setGuests }) => {
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [formData, setFormData] = useState({ name: '', whatsappNumber: '' });
+  const [formData, setFormData] = useState({ name: '', whatsappNumber: '', labels: [] as string[] });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [filter, setFilter] = useState<'all' | 'sent' | 'not_sent'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [isImportingContact, setIsImportingContact] = useState(false);
   const [isBulkImporting, setIsBulkImporting] = useState(false);
+  const [newLabel, setNewLabel] = useState('');
+  const [showLabelManager, setShowLabelManager] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateForm = () => {
@@ -54,12 +57,13 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
     let updatedGuests;
 
     if (editingGuest) {
-      updatedGuests = guests.map(g => 
-        g.id === editingGuest.id 
-          ? { 
-              ...editingGuest, 
+      updatedGuests = guests.map(g =>
+        g.id === editingGuest.id
+          ? {
+              ...editingGuest,
               ...formData,
-              whatsappNumber: formData.whatsappNumber ? formatWhatsAppNumber(formData.whatsappNumber) : undefined
+              whatsappNumber: formData.whatsappNumber ? formatWhatsAppNumber(formData.whatsappNumber) : undefined,
+              labels: formData.labels
             }
           : g
       );
@@ -68,6 +72,7 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
         id: Math.random().toString(36).substring(2, 11),
         name: formData.name.trim(),
         whatsappNumber: formData.whatsappNumber ? formatWhatsAppNumber(formData.whatsappNumber) : undefined,
+        labels: formData.labels,
         createdAt: now,
         sentStatus: 'not_sent',
         sentAt: undefined
@@ -99,7 +104,8 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
     setEditingGuest(guest);
     setFormData({
       name: guest.name,
-      whatsappNumber: guest.whatsappNumber || ''
+      whatsappNumber: guest.whatsappNumber || '',
+      labels: guest.labels || []
     });
     setErrors({});
     setIsCreating(false);
@@ -108,15 +114,42 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
   const resetForm = () => {
     setEditingGuest(null);
     setIsCreating(false);
-    setFormData({ name: '', whatsappNumber: '' });
+    setFormData({ name: '', whatsappNumber: '', labels: [] });
+    setNewLabel('');
     setErrors({});
   };
 
   const startCreate = () => {
     setIsCreating(true);
     setEditingGuest(null);
-    setFormData({ name: '', whatsappNumber: '' });
+    setFormData({ name: '', whatsappNumber: '', labels: [] });
     setErrors({});
+  };
+
+  // Label management functions
+  const addLabel = () => {
+    const label = newLabel.trim();
+    if (label && !formData.labels.includes(label)) {
+      setFormData(prev => ({
+        ...prev,
+        labels: [...prev.labels, label]
+      }));
+      setNewLabel('');
+    }
+  };
+
+  const removeLabel = (labelToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      labels: prev.labels.filter(label => label !== labelToRemove)
+    }));
+  };
+
+  const handleLabelKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addLabel();
+    }
   };
 
   const handleContactImport = async () => {
@@ -251,6 +284,7 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
             id: Math.random().toString(36).substring(2, 11),
             name: contactName,
             whatsappNumber: formattedPhone,
+            labels: [],
             createdAt: new Date(),
             sentStatus: 'not_sent' as const,
             sentAt: undefined
@@ -330,6 +364,7 @@ const Guests: React.FC<GuestsProps> = ({ selectedGuests, setSelectedGuests, gues
           id: Math.random().toString(36).substring(2, 11),
           name: guest.name,
           whatsappNumber: guest.whatsappNumber ? formatWhatsAppNumber(guest.whatsappNumber) : undefined,
+          labels: [],
           createdAt: new Date(),
           sentStatus: 'not_sent',
           sentAt: undefined
@@ -382,7 +417,15 @@ Bob Johnson,`;
                      (guest.whatsappNumber?.includes(query) || false);
     }
 
-    return matchesStatus && matchesSearch;
+    // Apply label filter
+    let matchesLabels = true;
+    if (selectedLabels.length > 0) {
+      matchesLabels = selectedLabels.some(selectedLabel =>
+        guest.labels?.includes(selectedLabel) || false
+      );
+    }
+
+    return matchesStatus && matchesSearch && matchesLabels;
   });
 
   const toggleGuestStatus = (guestId: string) => {
@@ -427,6 +470,19 @@ Bob Johnson,`;
     const updatedGuests = storageUtils.markMultipleGuestsAsNotSent(Array.from(selectedGuests));
     setGuests(updatedGuests);
     setSelectedGuests(new Set());
+  };
+
+  // Bulk label operations
+  const addLabelToSelected = (label: string) => {
+    if (selectedGuests.size === 0 || !label.trim()) return;
+    const updatedGuests = storageUtils.addLabelsToMultipleGuests(Array.from(selectedGuests), [label.trim()]);
+    setGuests(updatedGuests);
+  };
+
+  const removeLabelFromSelected = (label: string) => {
+    if (selectedGuests.size === 0) return;
+    const updatedGuests = storageUtils.removeLabelsFromMultipleGuests(Array.from(selectedGuests), [label]);
+    setGuests(updatedGuests);
   };
 
   return (
@@ -510,6 +566,64 @@ Bob Johnson,`;
         </div>
       </div>
 
+      {/* Label Management */}
+      {storageUtils.getAllLabels().length > 0 && (
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+              <h4 className="font-medium text-purple-800 text-sm sm:text-base">Label Tersedia</h4>
+              <span className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                {storageUtils.getAllLabels().length} label
+              </span>
+            </div>
+            <button
+              onClick={() => setShowLabelManager(!showLabelManager)}
+              className="text-purple-600 hover:text-purple-800 text-sm"
+            >
+              {showLabelManager ? 'Sembunyikan' : 'Kelola'}
+            </button>
+          </div>
+
+          {/* Always show labels */}
+          <div className="flex flex-wrap gap-2 mb-3">
+            {storageUtils.getAllLabels().map(label => {
+              const guestCount = guests.filter(g => g.labels?.includes(label)).length;
+              return (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1 bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full cursor-pointer hover:bg-purple-200 transition-colors"
+                  onClick={() => {
+                    // Toggle label filter
+                    if (selectedLabels.includes(label)) {
+                      setSelectedLabels(selectedLabels.filter(l => l !== label));
+                    } else {
+                      setSelectedLabels([...selectedLabels, label]);
+                    }
+                  }}
+                  title={`${guestCount} tamu • Klik untuk filter`}
+                >
+                  <Tag className="w-3 h-3" />
+                  {label}
+                  <span className="text-purple-600 font-medium">({guestCount})</span>
+                </span>
+              );
+            })}
+          </div>
+
+          {showLabelManager && (
+            <div className="border-t border-purple-200 pt-3">
+              <p className="text-xs text-purple-700 mb-2">
+                Klik label di atas untuk memfilter tamu. Gunakan form tamu untuk menambah label baru.
+              </p>
+              <div className="text-xs text-purple-600">
+                💡 Tips: Label membantu mengorganisir tamu berdasarkan kategori seperti Keluarga, Teman, Kerja, dll.
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Search and Filter - Sticky */}
       <div className="sticky top-20 z-10 bg-gray-50 p-4 rounded-lg space-y-4 shadow-sm border border-gray-200">
         {/* Search Input */}
@@ -550,6 +664,34 @@ Bob Johnson,`;
               </select>
             </div>
 
+            {/* Label Filter */}
+            {storageUtils.getAllLabels().length > 0 && (
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-gray-600" />
+                <select
+                  multiple
+                  value={selectedLabels}
+                  onChange={(e) => {
+                    const values = Array.from(e.target.selectedOptions, option => option.value);
+                    setSelectedLabels(values);
+                  }}
+                  className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-rose-500 focus:border-rose-500 min-w-[120px]"
+                  size={Math.min(4, storageUtils.getAllLabels().length)}
+                >
+                  {storageUtils.getAllLabels().map(label => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                {selectedLabels.length > 0 && (
+                  <span className="text-xs text-gray-500">
+                    {selectedLabels.length} dipilih
+                  </span>
+                )}
+              </div>
+            )}
+
             {selectedGuests.size > 0 && (
               <div className="text-sm text-gray-600">
                 {selectedGuests.size} tamu dipilih
@@ -557,7 +699,7 @@ Bob Johnson,`;
             )}
 
             {/* Active Filters Indicator */}
-            {(searchQuery || filter !== 'all') && (
+            {(searchQuery || filter !== 'all' || selectedLabels.length > 0) && (
               <div className="flex items-center gap-2 text-xs">
                 <span className="text-gray-500">Filter aktif:</span>
                 {searchQuery && (
@@ -570,10 +712,16 @@ Bob Johnson,`;
                     {filter === 'sent' ? 'Sudah Dikirim' : 'Belum Dikirim'}
                   </span>
                 )}
+                {selectedLabels.map(label => (
+                  <span key={label} className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                    {label}
+                  </span>
+                ))}
                 <button
                   onClick={() => {
                     setSearchQuery('');
                     setFilter('all');
+                    setSelectedLabels([]);
                   }}
                   className="text-gray-400 hover:text-gray-600 ml-1"
                 >
@@ -615,6 +763,48 @@ Bob Johnson,`;
               >
                 Tandai Belum Dikirim
               </button>
+
+              {/* Bulk Label Operations */}
+              {storageUtils.getAllLabels().length > 0 && (
+                <>
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        addLabelToSelected(e.target.value);
+                        e.target.value = ''; // Reset selection
+                      }
+                    }}
+                    className="text-xs px-2 py-1 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>+ Tambah Label</option>
+                    {storageUtils.getAllLabels().map(label => (
+                      <option key={label} value={label}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Show remove buttons for labels that exist on selected guests */}
+                  {(() => {
+                    const selectedGuestsList = Array.from(selectedGuests).map(id => guests.find(g => g.id === id)).filter(Boolean);
+                    const commonLabels = storageUtils.getAllLabels().filter(label =>
+                      selectedGuestsList.some(guest => guest?.labels?.includes(label))
+                    );
+
+                    return commonLabels.map(label => (
+                      <button
+                        key={label}
+                        onClick={() => removeLabelFromSelected(label)}
+                        className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                        title={`Hapus label "${label}"`}
+                      >
+                        - {label}
+                      </button>
+                    ));
+                  })()}
+                </>
+              )}
             </>
           )}
           </div>
@@ -689,6 +879,58 @@ Bob Johnson,`;
             </p>
           </div>
 
+          {/* Labels Section */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Label
+            </label>
+
+            {/* Display existing labels */}
+            {formData.labels.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {formData.labels.map((label, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                  >
+                    <Tag className="w-3 h-3" />
+                    {label}
+                    <button
+                      type="button"
+                      onClick={() => removeLabel(label)}
+                      className="ml-1 text-blue-600 hover:text-blue-800"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Add new label */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newLabel}
+                onChange={(e) => setNewLabel(e.target.value)}
+                onKeyDown={handleLabelKeyDown}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm"
+                placeholder="Tambah label (contoh: Keluarga, Teman, Kerja)"
+              />
+              <button
+                type="button"
+                onClick={addLabel}
+                disabled={!newLabel.trim()}
+                className="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">
+              Label membantu mengorganisir dan memfilter daftar tamu
+            </p>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-2 pt-4">
             <button
               onClick={handleSave}
@@ -738,6 +980,21 @@ Bob Johnson,`;
                       <span className="text-gray-400">Tidak ada WhatsApp</span>
                     )}
                   </div>
+
+                  {/* Labels */}
+                  {guest.labels && guest.labels.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {guest.labels.map((label, index) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                        >
+                          <Tag className="w-3 h-3" />
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -816,6 +1073,9 @@ Bob Johnson,`;
                   WhatsApp
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Label
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50">
@@ -852,6 +1112,23 @@ Bob Johnson,`;
                         </a>
                       ) : (
                         <span className="text-gray-400">-</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
+                      {guest.labels && guest.labels.length > 0 ? (
+                        guest.labels.map((label, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                          >
+                            <Tag className="w-3 h-3" />
+                            {label}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-400 text-sm">-</span>
                       )}
                     </div>
                   </td>

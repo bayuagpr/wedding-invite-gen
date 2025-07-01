@@ -10,6 +10,7 @@ export interface Guest {
   id: string;
   name: string;
   whatsappNumber?: string;
+  labels?: string[];
   createdAt: Date;
   sentStatus: 'not_sent' | 'sent';
   sentAt?: Date;

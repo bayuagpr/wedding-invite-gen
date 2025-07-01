@@ -118,35 +118,6 @@ const Export: React.FC<ExportProps> = ({
     setSelectedGuests(newSelection);
   };
 
-  // const selectAllGuests = () => {
-  //   const allGuestIds = guests.map(g => g.id);
-  //   setSelectedGuests(new Set(allGuestIds));
-  // };
-
-  // const selectUnsentGuests = () => {
-  //   const unsentGuestIds = guests
-  //     .filter(guest => guest.sentStatus === 'not_sent')
-  //     .map(guest => guest.id);
-  //   setSelectedGuests(new Set(unsentGuestIds));
-  // };
-
-  // const clearSelection = () => {
-  //   setSelectedGuests(new Set());
-  // };
-
-  // const markSelectedAsSent = () => {
-  //   if (selectedGuests.size === 0) return;
-
-  //   const updatedGuests = storageUtils.markMultipleGuestsAsSent(Array.from(selectedGuests));
-  //   setGuests(updatedGuests);
-
-  //   // Update selection to exclude newly marked guests
-  //   const remainingUnsentIds = updatedGuests
-  //     .filter(guest => guest.sentStatus === 'not_sent')
-  //     .map(guest => guest.id);
-  //   setSelectedGuests(new Set(remainingUnsentIds));
-  // };
-
   // Get only selected guests for display
   const selectedGuestObjects = guests.filter(guest => selectedGuests.has(guest.id));
 
@@ -188,46 +159,6 @@ const Export: React.FC<ExportProps> = ({
           Template: <span className="font-medium">{selectedTemplate.name}</span>
         </div>
       </div>
-
-      {/* Guest Selection Controls */}
-      {/* <div className="bg-gray-50 p-4 rounded-lg">
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="text-sm text-gray-700">
-              <span className="font-medium">{selectedGuests.size}</span> dari <span className="font-medium">{guests.length}</span> tamu dipilih
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={selectAllGuests}
-              className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
-            >
-              Pilih Semua
-            </button>
-            <button
-              onClick={selectUnsentGuests}
-              className="text-xs px-3 py-1 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors"
-            >
-              Pilih Belum Dikirim
-            </button>
-            <button
-              onClick={clearSelection}
-              className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              Batal Pilih
-            </button>
-            {selectedGuests.size > 0 && (
-              <button
-                onClick={markSelectedAsSent}
-                className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors font-medium"
-              >
-                Tandai {selectedGuests.size} Tamu Sebagai Dikirim
-              </button>
-            )}
-          </div>
-        </div>
-      </div> */}
 
       {/* Bulk Actions */}
       <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md border">

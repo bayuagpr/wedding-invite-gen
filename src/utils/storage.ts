@@ -29,16 +29,17 @@ export const storageUtils = {
 
     const guests = JSON.parse(stored);
 
-    // Migration: Add tracking fields to existing guests
+    // Migration: Add tracking fields and labels to existing guests
     const migratedGuests = guests.map((guest: any) => ({
       ...guest,
       sentStatus: guest.sentStatus || 'not_sent',
       sentAt: guest.sentAt ? new Date(guest.sentAt) : undefined,
-      createdAt: new Date(guest.createdAt)
+      createdAt: new Date(guest.createdAt),
+      labels: guest.labels || []
     }));
 
     // Save migrated data back to localStorage if migration occurred
-    const needsMigration = guests.some((guest: any) => !guest.sentStatus);
+    const needsMigration = guests.some((guest: any) => !guest.sentStatus || !guest.labels);
     if (needsMigration) {
       localStorage.setItem(GUESTS_KEY, JSON.stringify(migratedGuests));
     }
@@ -94,6 +95,73 @@ export const storageUtils = {
     );
     storageUtils.saveGuests(updatedGuests);
     return updatedGuests;
+  },
+
+  // Label management
+  addLabelToGuest: (guestId: string, label: string): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const updatedGuests = guests.map(guest =>
+      guest.id === guestId
+        ? {
+            ...guest,
+            labels: guest.labels
+              ? [...new Set([...guest.labels, label])] // Avoid duplicates
+              : [label]
+          }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
+  },
+
+  removeLabelFromGuest: (guestId: string, label: string): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const updatedGuests = guests.map(guest =>
+      guest.id === guestId
+        ? {
+            ...guest,
+            labels: guest.labels ? guest.labels.filter(l => l !== label) : []
+          }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
+  },
+
+  addLabelsToMultipleGuests: (guestIds: string[], labels: string[]): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const updatedGuests = guests.map(guest =>
+      guestIds.includes(guest.id)
+        ? {
+            ...guest,
+            labels: guest.labels
+              ? [...new Set([...guest.labels, ...labels])] // Merge and deduplicate
+              : [...labels]
+          }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
+  },
+
+  removeLabelsFromMultipleGuests: (guestIds: string[], labels: string[]): Guest[] => {
+    const guests = storageUtils.getGuests();
+    const updatedGuests = guests.map(guest =>
+      guestIds.includes(guest.id)
+        ? {
+            ...guest,
+            labels: guest.labels ? guest.labels.filter(l => !labels.includes(l)) : []
+          }
+        : guest
+    );
+    storageUtils.saveGuests(updatedGuests);
+    return updatedGuests;
+  },
+
+  getAllLabels: (): string[] => {
+    const guests = storageUtils.getGuests();
+    const allLabels = guests.flatMap(guest => guest.labels || []);
+    return [...new Set(allLabels)].sort();
   },
 
   // Settings
