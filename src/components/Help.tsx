@@ -1,299 +1,65 @@
-import React, { useEffect } from 'react';
-import ReactMarkdown from 'react-markdown';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Book, ArrowLeft } from 'lucide-react';
-import rehypeSlug from 'rehype-slug';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 
 const Help: React.FC = () => {
   const navigate = useNavigate();
+  const [step, setStep] = useState(1);
+  const totalSteps = 4;
 
-  // Handle smooth scrolling for anchor links
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash) {
-        const element = document.getElementById(hash.substring(1));
-        if (element) {
-          element.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      }
-    };
+  const goNext = () => step < totalSteps && setStep(step + 1);
+  const goBack = () => step > 1 && setStep(step - 1);
 
-    // Handle initial hash on page load
-    handleHashChange();
+  const stepIcons = ['🚀', '📋', '⚡', '✨'];
+  const stepColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
 
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleHashChange);
-
-    return () => {
-      window.removeEventListener('hashchange', handleHashChange);
-    };
-  }, []);
-
-  // Handle anchor link clicks within the component
-  const handleAnchorClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLElement;
-    if (target.tagName === 'A' && target.getAttribute('href')?.startsWith('#')) {
-      event.preventDefault();
-      const hash = target.getAttribute('href')!;
-      const element = document.getElementById(hash.substring(1));
-      if (element) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-        // Update URL without triggering page reload
-        window.history.pushState(null, '', hash);
-      }
+  const steps = [
+    {
+      title: '🌟 Buka Aplikasi',
+      content: [
+        'Buka tautan aplikasi menggunakan Google Chrome di HP Android Anda.',
+        'Ini penting agar semua fitur berjalan dengan baik, termasuk akses kontak.'
+      ],
+      bg: 'linear-gradient(135deg, #FEF7CD, #FBBF24)',
+      border: '#F59E0B',
+      text: '#92400E'
+    },
+    {
+      title: '🔍 Masuk ke Menu',
+      content: [
+        'Ketuk ikon tiga garis di pojok kiri atas layar.',
+        'Setelah itu akan muncul halaman panduan langkah demi langkah.'
+      ],
+      bg: 'linear-gradient(135deg, #DBEAFE, #3B82F6)',
+      border: '#2563EB',
+      text: '#1E40AF'
+    },
+    {
+      title: '⚡ Langkah-Langkah Penggunaan',
+      content: null
+    },
+    {
+      title: '✅ Tandai Undangan yang Sudah Dikirim',
+      content: [
+        'Setelah mengirim pesan, kembali ke bagian Tamu.',
+        'Geser tombol di samping nama tamu ke posisi "Sudah Dikirim".',
+        'Ini memudahkan Anda melacak siapa saja yang sudah menerima undangan.'
+      ],
+      bg: 'linear-gradient(135deg, #D1FAE5, #10B981)',
+      border: '#059669',
+      text: '#065F46'
     }
-  };
-  const markdownContent = `
-# Panduan Penggunaan Aplikasi Generator Undangan Pernikahan
+  ];
 
-## Daftar Isi
-- [Pendahuluan](#pendahuluan)
-- [Memulai](#memulai)
-- [Mengelola Template](#mengelola-template)
-- [Mengelola Daftar Tamu](#mengelola-daftar-tamu)
-- [Kirim Pesan (dengan Preview)](#kirim-pesan-dengan-preview)
-- [Tips dan Trik](#tips-dan-trik)
-
-## Pendahuluan
-
-Selamat datang di aplikasi Generator Undangan Pernikahan untuk pernikahan Putri Shahya Maharani & Bayu Agung Prakoso! Aplikasi ini dirancang untuk memudahkan Anda dalam membuat, mengelola, dan mengirimkan undangan digital kepada para tamu undangan.
-
-**Catatan Penting:**
-- Semua data tersimpan secara lokal di browser Anda
-- Tidak diperlukan koneksi internet kecuali saat mengirim undangan via WhatsApp
-- Fitur import dari kontak perangkat hanya tersedia di Chrome Android (versi 80+)
-
-## Memulai
-
-Aplikasi ini memiliki tiga menu utama yang dapat diakses melalui tab di bagian atas:
-1. **Template** - Untuk memilih dan melihat template undangan
-2. **Tamu** - Untuk mengelola daftar tamu undangan
-3. **Kirim** - Untuk mengirim undangan (dengan fitur preview terintegrasi)
-
-## Mengelola Template
-
-Tab Template berisi berbagai pilihan template undangan yang dapat Anda gunakan.
-
-### Memilih Template
-1. Klik pada tab **Template**
-2. Browse melalui template yang tersedia (Formal dan Informal)
-3. Klik pada template untuk melihat pratinjau
-4. Klik tombol **Pilih Template** untuk menetapkan template yang akan digunakan
-
-### Template yang Tersedia
-- **Template Formal** - Cocok untuk undangan resmi dengan bahasa formal
-- **Template Informal** - Cocok untuk undangan dengan bahasa yang lebih santai
-
-Setiap template sudah berisi tag \`{nama_tamu}\` yang nantinya akan otomatis diisi dengan nama tamu yang sesuai.
-
-## Mengelola Daftar Tamu
-
-Tab Tamu memungkinkan Anda untuk menambah, mengedit, dan mengelola daftar tamu.
-
-### Menambahkan Tamu Secara Manual
-1. Klik tab **Tamu**
-2. Klik tombol **Tambah Tamu**
-3. Isi formulir dengan:
-   - Nama Tamu (wajib diisi)
-   - Nomor WhatsApp (opsional, format: 08xxx, +628xxx, atau 628xxx)
-4. **Fitur Baru**: Klik tombol **Import** di samping kolom nama untuk mengimpor data dari kontak perangkat (hanya tersedia di Chrome Android)
-5. Klik **Simpan**
-
-### Import Tamu dari File CSV
-1. Klik tombol **Import CSV**
-2. Pilih file CSV dari komputer Anda
-3. File CSV harus memiliki kolom:
-   - Nama (wajib)
-   - WhatsApp (opsional)
-4. Anda dapat mengunduh contoh file CSV dengan mengklik "Download contoh file CSV"
-
-### Import Tamu dari Kontak Perangkat (Fitur Baru)
-**Catatan**: Fitur ini hanya tersedia di browser Chrome pada perangkat Android.
-
-#### Import Satu Kontak (Helper Form)
-1. Klik tombol **Tambah Tamu**
-2. Klik tombol **Import** di samping kolom nama
-3. Pilih satu kontak dari daftar kontak perangkat
-4. Data nama dan nomor telepon akan otomatis mengisi formulir
-5. Review dan edit jika diperlukan, lalu klik **Simpan**
-
-#### Import Banyak Kontak Sekaligus
-1. Klik tombol **Import dari Kontak** (tombol ungu di samping Import CSV)
-2. Pilih beberapa kontak sekaligus dari daftar kontak perangkat
-3. Sistem akan memproses semua kontak yang dipilih:
-   - Memvalidasi nomor WhatsApp
-   - Mendeteksi dan melewati kontak duplikat
-   - Memformat nomor telepon secara otomatis
-4. Pesan konfirmasi akan menampilkan:
-   - Jumlah kontak yang berhasil diimpor
-   - Jumlah kontak dengan nomor WhatsApp valid
-   - Daftar kontak duplikat yang dilewati
-
-### Mengedit atau Menghapus Tamu
-- **Edit**: Klik ikon pensil (✏️) di samping nama tamu
-- **Hapus**: Klik ikon sampah (🗑️) di samping nama tamu
-
-### Mengelola Label Tamu (Fitur Baru)
-Label membantu mengorganisir tamu berdasarkan kategori seperti Keluarga, Teman, Kerja, dll.
-
-#### Menambahkan Label pada Tamu
-1. Saat membuat atau mengedit tamu, scroll ke bagian **Label**
-2. Ketik label baru di kolom input (contoh: "Keluarga", "Teman SMA", "Rekan Kerja")
-3. Tekan **Enter** atau klik tombol **+** untuk menambahkan label
-4. Ulangi untuk menambahkan beberapa label pada satu tamu
-5. Untuk menghapus label, klik ikon **×** di samping label
-
-#### Kelola Label yang Tersedia
-Jika sudah ada label dalam sistem, akan muncul bagian **Label Tersedia** yang menampilkan:
-- Semua label yang pernah dibuat
-- Jumlah tamu untuk setiap label
-- Klik label untuk langsung memfilter tamu dengan label tersebut
-
-#### Operasi Label Massal
-Untuk tamu yang sudah dipilih (dicentang), Anda dapat:
-1. **Menambah label**: Pilih label dari dropdown **+ Tambah Label**
-2. **Menghapus label**: Klik tombol **- [Nama Label]** yang muncul untuk label yang ada pada tamu terpilih
-
-### Filter dan Pencarian
-- **Pencarian**: Gunakan kolom pencarian untuk mencari tamu berdasarkan nama atau nomor WhatsApp
-- **Filter Status**: Gunakan dropdown filter untuk memfilter tamu berdasarkan status (Semua, Sudah Dikirim, Belum Dikirim)
-- **Filter Label**: Pilih satu atau beberapa label dari dropdown filter label untuk menampilkan tamu dengan label tertentu
-- **Indikator Filter**: Filter yang aktif akan ditampilkan sebagai badge berwarna yang dapat dihapus dengan mengklik ikon ×
-
-### Menandai Status Pengiriman
-- Geser tombol switch di samping nama tamu untuk menandai undangan sebagai "Sudah Dikirim" atau "Belum Dikirim"
-- Anda juga dapat menandai beberapa tamu sekaligus dengan:
-  1. Pilih tamu dengan mencentang kotak di samping nama
-  2. Klik "Tandai Dikirim" atau "Tandai Belum Dikirim"
-
-### Operasi Massal untuk Tamu Terpilih
-Setelah memilih beberapa tamu dengan mencentang kotak di samping nama, Anda dapat melakukan:
-- **Pilih Semua/Batal Pilih**: Untuk memilih atau membatalkan pilihan semua tamu yang terlihat
-- **Tandai Status**: Ubah status pengiriman beberapa tamu sekaligus
-- **Kelola Label**: Tambah atau hapus label dari beberapa tamu sekaligus
-
-## Kirim Pesan (dengan Preview)
-
-Tab Kirim menyediakan fitur preview terintegrasi dan opsi untuk mengirim undangan. Anda dapat melihat pratinjau pesan sebelum mengirimkannya tanpa perlu berpindah tab.
-
-### Melihat Preview Pesan
-1. Klik tab **Kirim**
-2. Pilih tamu dari daftar dengan mencentang kotak di samping nama
-3. Preview pesan akan otomatis muncul untuk setiap tamu yang dipilih
-4. Lihat bagaimana pesan akan terlihat dengan nama tamu yang sudah disisipkan
-
-### Pilih Tamu untuk Dikirimi Undangan
-1. Klik tab **Kirim**
-2. Pilih tamu dengan mencentang kotak di samping nama, atau gunakan tombol:
-   - **Pilih Semua** - Memilih semua tamu
-   - **Pilih Belum Dikirim** - Hanya memilih tamu yang belum menerima undangan
-   - **Batal Pilih** - Membatalkan semua pilihan
-
-### Mengirim Via WhatsApp
-1. Pilih tamu yang ingin dikirimi undangan
-2. Klik tombol **WhatsApp** di samping nama tamu
-3. Browser akan membuka WhatsApp Web dengan pesan yang sudah dipersonalisasi
-4. Klik tombol kirim di WhatsApp
-
-### Salin Pesan
-1. Pilih tamu yang ingin dikirimi undangan
-2. Klik tombol **Salin** di samping nama tamu untuk menyalin pesan individual
-3. Atau klik **Salin [jumlah] Pesan** untuk menyalin semua pesan terpilih sekaligus
-
-### Download Semua Pesan
-1. Klik tombol **Download sebagai File**
-2. File teks berisi semua pesan undangan akan diunduh ke komputer Anda
-
-### Menandai Status Pengiriman
-- Setelah mengirim undangan, geser tombol switch untuk menandai undangan sebagai "Sudah Dikirim"
-- Atau gunakan tombol **Tandai [jumlah] Tamu Sebagai Dikirim** untuk menandai beberapa tamu sekaligus
-
-## Tips dan Trik
-
-### Untuk Pengelolaan Tamu yang Efisien
-- **Import Massal**: Gunakan fitur "Import dari Kontak" untuk menambahkan banyak tamu sekaligus langsung dari kontak perangkat (Chrome Android)
-- **Import CSV**: Gunakan fitur impor CSV untuk menambahkan banyak tamu dari file spreadsheet
-- **Helper Import**: Gunakan tombol "Import" di formulir tambah tamu untuk mengisi data dengan cepat dari satu kontak
-- **Organisir dengan Label**: Gunakan label untuk mengelompokkan tamu (contoh: "Keluarga", "Teman SMA", "Rekan Kerja")
-- **Filter Efektif**: Kombinasikan filter status, pencarian, dan label untuk menemukan tamu dengan cepat
-- Manfaatkan filter untuk fokus pada tamu yang belum menerima undangan
-- Tandai tamu sebagai "Sudah Dikirim" segera setelah mengirim undangan
-
-### Untuk Pengiriman yang Cepat
-- **Preview Terintegrasi**: Gunakan fitur preview di tab Kirim untuk melihat pesan sebelum mengirim tanpa berpindah tab
-- **Filter berdasarkan Label**: Gunakan filter label untuk mengirim undangan ke kelompok tertentu (misalnya kirim ke "Keluarga" dulu, lalu "Teman")
-- Kirim ke beberapa tamu dengan nomor WhatsApp sekaligus dengan membuka banyak tab WhatsApp
-- Salin semua pesan untuk tamu yang tidak memiliki WhatsApp dan kirim melalui media lain
-
-### Optimalisasi Penyimpanan
-- Data tersimpan di browser secara lokal (localStorage)
-- Jangan menghapus data browsing/cache jika ingin menyimpan data tamu dan template
-- Gunakan browser yang sama untuk mengelola undangan agar data tetap konsisten
-
-### Troubleshooting Import Kontak
-**Jika tombol "Import dari Kontak" tidak muncul:**
-- Pastikan menggunakan browser Chrome di perangkat Android
-- Pastikan Chrome versi 80 atau lebih baru
-- Pastikan mengakses aplikasi melalui HTTPS
-
-**Jika import kontak gagal:**
-- Pastikan memberikan izin akses kontak saat diminta
-- Coba tutup dan buka kembali aplikasi
-- Pastikan kontak tersimpan di perangkat (bukan hanya di akun Google)
-
-**Jika nomor WhatsApp tidak valid:**
-- Sistem akan tetap mengimpor kontak dengan nomor WhatsApp
-- Anda dapat menambahkan nomor WhatsApp secara manual setelah import
-- Format yang didukung: 08xxx, +628xxx, 628xxx
-
-### Troubleshooting Pengiriman Pesan
-
-**Jika nomor WhatsApp tidak tidak ditemukan:**
-- Anda dapat mengubah nomor WhatsApp secara manual dengan nomor yang sesuai
-- Anda juga dapat menyalin pesan dan mengirimkannya kepada tamu anda melalui platform selain whatsapp
-
-### Tips Penggunaan Label
-**Ide Label yang Berguna:**
-- Berdasarkan hubungan: "Keluarga", "Teman", "Rekan Kerja"
-- Berdasarkan asal: "Jakarta", "Bandung", "Luar Kota"
-- Berdasarkan acara: "Resepsi", "Akad Saja", "VIP"
-- Berdasarkan kategori: "Undangan Fisik", "Digital Saja"
-
-**Best Practices:**
-- Gunakan nama label yang konsisten dan mudah dipahami
-- Jangan terlalu banyak label untuk satu tamu (maksimal 3-4)
-- Manfaatkan filter label untuk pengiriman bertahap
-- Gabungkan label dengan filter status untuk pengelolaan yang lebih efektif
-
----
-
-Aplikasi Generator Undangan Pernikahan ini dirancang untuk membuat proses pengiriman undangan pernikahan menjadi lebih efisien dan personal. Dengan fitur preview yang terintegrasi langsung di tab pengiriman, Anda dapat melihat dan mengirim undangan dalam satu tempat. Selamat menggunakan aplikasi ini dan selamat merayakan hari bahagia Anda!
-
-*Terakhir diperbarui: 1 Juli 2025 - Ditambahkan fitur Import dari Kontak, sistem Label untuk organisasi tamu, dan penyederhanaan alur kerja dengan menggabungkan preview ke tab pengiriman*`;
+  const tips = [
+    '🔄 Gunakan Chrome versi terbaru agar semua fitur bekerja dengan baik',
+    '💾 Jangan hapus data browser agar daftar tamu tetap tersimpan',
+    '🏷️ Anda bisa memberi label pada tamu (contoh: "Keluarga", "Teman", dll.) untuk pengelompokan',
+    '🤝 Bila bingung, silakan minta bantuan keluarga atau panitia lainnya'
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Add custom styles for anchor links and scroll offset */}
-      <style>{`
-        .anchor-link {
-          text-decoration: none;
-        }
-        .anchor-link:hover {
-          text-decoration: underline;
-        }
-        /* Add scroll offset to account for sticky header */
-        h1[id], h2[id], h3[id], h4[id], h5[id], h6[id] {
-          scroll-margin-top: 120px;
-        }
-      `}</style>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-500 to-purple-600">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -320,25 +86,184 @@ Aplikasi Generator Undangan Pernikahan ini dirancang untuk membuat proses pengir
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border p-6 sm:p-8">
-          <div
-            className="prose prose-gray max-w-none prose-headings:text-gray-900 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-h4:text-base prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-gray-900 prose-code:text-pink-600 prose-code:bg-pink-50 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none"
-            onClick={handleAnchorClick}
-          >
-            <ReactMarkdown
-              rehypePlugins={[
-                rehypeSlug,
-                [rehypeAutolinkHeadings, {
-                  behavior: 'wrap',
-                  properties: {
-                    className: ['anchor-link']
-                  }
-                }]
-              ]}
-            >
-              {markdownContent}
-            </ReactMarkdown>
+      <div className="max-w-screen-md mx-auto p-4 md:p-8 font-sans">
+        <div className="bg-white bg-opacity-90 rounded-3xl p-6 md:p-10 shadow-2xl backdrop-blur-md">
+
+          {/* Progress Steps */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              {[1, 2, 3, 4].map((num, idx) => (
+                <div key={num} className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-all duration-300 ${num <= step ? 'text-white' : 'text-gray-400'}`} style={{ backgroundColor: num <= step ? stepColors[idx] : '#E5E7EB' }}>
+                  {num <= step ? stepIcons[idx] : num}
+                </div>
+              ))}
+            </div>
+            <div className="w-full h-2 bg-gray-300 rounded">
+              <div className="h-full rounded transition-all duration-500" style={{ width: `${(step / totalSteps) * 100}%`, background: `linear-gradient(90deg, ${stepColors[0]}, ${stepColors[Math.min(step - 1, 3)]})` }} />
+            </div>
+          </div>
+
+          <div className={`relative border-2 rounded-2xl p-6 mb-6`} style={{ borderColor: stepColors[step - 1] }}>
+            <div className="absolute top-0 left-0 right-0 h-1.5 rounded-t-2xl" style={{ background: `linear-gradient(90deg, ${stepColors[step - 1]}, ${stepColors[Math.min(step, 3)]})` }} />
+
+            <div className="flex items-center mb-4">
+              <span className="text-3xl mr-4">{stepIcons[step - 1]}</span>
+              <h3 className="text-xl font-bold" style={{ color: stepColors[step - 1] }}>
+                Langkah {step} dari {totalSteps}
+              </h3>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
+              <button onClick={goBack} disabled={step === 1} className={`py-3 px-6 text-white font-semibold rounded-lg transition-transform duration-300 ${step === 1 ? 'bg-gray-300 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}>
+                ⏮ Sebelumnya
+              </button>
+              <button onClick={goNext} disabled={step === totalSteps} className={`py-3 px-6 text-white font-semibold rounded-lg transition-transform duration-300 ${step === totalSteps ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}>
+                Selanjutnya ⏭
+              </button>
+            </div>
+
+            {/* Step Content */}
+            {step < 3 ? (
+              <div style={{ background: steps[step - 1].bg, borderColor: steps[step - 1].border }} className="rounded-xl border-2 p-4">
+                <div className="space-y-2">
+                  {steps[step - 1].content?.map((text, idx) => (
+                    <p key={idx} className="text-base font-medium" style={{ color: steps[step - 1].text }}>
+                      • {text}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ) : step === 3 ? (
+              <div className="space-y-4">
+                {[{
+                  icon: '✉️',
+                  title: '1. Pilih Template Pesan',
+                  items: [
+                    'Anda akan melihat beberapa pilihan isi pesan undangan (formal dan informal).',
+                    'Pratinjau teks pesan langsung terlihat di layar.',
+                    'Pilih salah satu dengan menekan tombol Pilih Template.',
+                    'Teks pesan ini bisa diedit nanti sesuai keperluan.'
+                  ],
+                  color: '#EC4899'
+                }, {
+                  icon: '🧑‍🤝‍🧑',
+                  title: '2. Tambah Tamu',
+                  desc: 'Masuk ke bagian Tamu melalui menu utama untuk menambahkan daftar tamu.',
+                  subTitle: 'Ada dua cara yang bisa Anda gunakan:',
+                  hasSubItems: true,
+                  subItems: [
+                    {
+                      subtitle: '✅ Cara 1 – Tambah Manual',
+                      steps: [
+                        'Tekan tombol Tambah Tamu.',
+                        'Isi Nama Tamu dan Nomor WhatsApp (jika ada).',
+                        'Untuk mempercepat, tekan ikon orang di samping kolom nama untuk memilih dari kontak HP.',
+                        'Tekan Simpan.'
+                      ]
+                    },
+                    {
+                      subtitle: '✅ Cara 2 – Import dari Kontak (Tambah Banyak Sekaligus)',
+                      steps: [
+                        'Masih di bagian Tamu, tekan tombol Import dari Kontak.',
+                        'Pilih beberapa nama dari daftar kontak HP Anda.',
+                        'Nomor WhatsApp akan otomatis terisi.',
+                        '📌 Catatan: Fitur ini hanya tersedia di Google Chrome Android dan memerlukan izin akses kontak.'
+                      ]
+                    }
+                  ],
+                  color: '#8B5CF6'
+                }, {
+                  icon: '☑️',
+                  title: '3. Pilih Tamu yang Akan Dikirimi Undangan',
+                  items: [
+                    'Masih di bagian Tamu, centang nama-nama tamu yang ingin dikirimi undangan.',
+                    'Tamu yang dicentang akan muncul di bagian Kirim.'
+                  ],
+                  color: '#06B6D4'
+                }, {
+                  icon: '📤',
+                  title: '4. Kirim Undangan',
+                  items: [
+                    'Masuk ke bagian Kirim melalui menu utama.',
+                    'Daftar tamu yang sudah dicentang akan muncul otomatis.',
+                    'Pratinjau pesan akan muncul untuk masing-masing tamu.',
+                    'Tekan tombol WhatsApp di samping nama.',
+                    'WhatsApp akan terbuka otomatis → tinggal tekan Kirim.'
+                  ],
+                  color: '#10B981'
+                }].map((item, idx) => (
+                  <div key={idx} className="rounded-xl border-2 p-4 shadow-sm" style={{ borderColor: item.color }}>
+                    <div className="flex items-center mb-3">
+                      <span className="text-xl mr-3">{item.icon}</span>
+                      <h5 className="font-semibold text-lg" style={{ color: item.color }}>{item.title}</h5>
+                    </div>
+
+                    {item.desc && (
+                      <p className="text-gray-700 text-base mb-2">{item.desc}</p>
+                    )}
+
+                    {item.subTitle && (
+                      <p className="text-gray-700 text-base font-medium mb-2">{item.subTitle}</p>
+                    )}
+
+                    {item.items && (
+                      <div className="space-y-1">
+                        {item.items.map((text, i) => (
+                          <p key={i} className="text-gray-700 text-sm ml-2">• {text}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    {item.hasSubItems && item.subItems && (
+                      <div className="space-y-3">
+                        {item.subItems.map((subItem, i) => (
+                          <div key={i} className="ml-2">
+                            <p className="font-medium text-gray-800 text-sm mb-1">{subItem.subtitle}</p>
+                            <div className="space-y-1 ml-3">
+                              {subItem.steps.map((step, j) => (
+                                <p key={j} className="text-gray-700 text-sm">• {step}</p>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="rounded-xl border-2 p-4 mb-6" style={{ background: steps[3].bg, borderColor: steps[3].border }}>
+                  <div className="space-y-2">
+                    {steps[3].content?.map((text, idx) => (
+                      <p key={idx} className="text-base font-medium" style={{ color: steps[3].text }}>
+                        • {text}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h5 className="text-purple-700 font-semibold text-lg mb-2">💡 Tips Tambahan</h5>
+                  <div className="space-y-2">
+                    {tips.map((tip, idx) => (
+                      <div key={idx} className="bg-purple-100 border border-purple-200 rounded-md p-3 text-purple-900 text-sm font-medium">
+                        {tip}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <button onClick={goBack} disabled={step === 1} className={`py-3 px-6 text-white font-semibold rounded-lg transition-transform duration-300 ${step === 1 ? 'bg-gray-300 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}>
+              ⏮ Sebelumnya
+            </button>
+            <button onClick={goNext} disabled={step === totalSteps} className={`py-3 px-6 text-white font-semibold rounded-lg transition-transform duration-300 ${step === totalSteps ? 'bg-gray-300 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}>
+              Selanjutnya ⏭
+            </button>
           </div>
         </div>
       </div>
